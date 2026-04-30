@@ -39,7 +39,6 @@ function MessageBubble({ msg, onPlaySong, onAddToQueue }) {
                   <div className="song-card__info">
                     <div className="song-card__name">{song.name}</div>
                     <div className="song-card__artist">{song.artist}</div>
-                    {song.playable === false && <span className="song-card__unplayable">无版权</span>}
                   </div>
                   <button
                     className="song-card__add"

@@ -20,21 +20,22 @@ router.post('/', async (req, res) => {
     // 调用 AI（ai.js 内部已完成歌曲验证）
     const result = await aiChat(message, { weather });
 
-    // 对验证后的歌曲尝试获取播放 URL
+    // 对验证后的歌曲尝试获取播放 URL（只保留有版权的）
     const songs = [];
     if (result.songs && result.songs.length > 0) {
       for (const song of result.songs) {
-        const enriched = { ...song, playable: false };
-        if (song.id) {
-          try {
-            const urlInfo = await getSongUrl(song.id);
-            enriched.url = urlInfo.url;
-            enriched.playable = true;
-          } catch {
-            // 无版权，保留歌曲信息但不设 URL
-          }
+        if (!song.id) continue;
+        try {
+          const urlInfo = await getSongUrl(song.id);
+          songs.push({
+            ...song,
+            url: urlInfo.url,
+            playable: true,
+          });
+        } catch {
+          // 无版权，直接丢弃
+          console.log(`无版权，已过滤: ${song.name} - ${song.artist}`);
         }
-        songs.push(enriched);
       }
     }
 

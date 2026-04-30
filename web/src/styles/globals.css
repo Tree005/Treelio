@@ -769,19 +769,6 @@ body {
   margin-top: 1px;
 }
 
-.song-card__unplayable {
-  font-size: 9px;
-  color: #e74c3c;
-  background: rgba(231, 76, 60, 0.1);
-  border-radius: 2px;
-  padding: 1px 5px;
-  margin-left: 4px;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
 .song-card__add {
   display: flex;
   align-items: center;
