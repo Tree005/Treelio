@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import { readFileSync } from 'fs';
 import config from '../config.js';
 import { getDb, saveDb } from '../db/index.js';
+import { findSong } from './netease.js';
 
 // 读取用户歌单语料
 const corpusPath = config.dataDir + '/user-corpus.json';
@@ -128,6 +129,35 @@ export async function chat(userMessage, context = {}) {
   } catch {
     // 解析失败时回退为纯文本回复
     parsed = { reply: content, songs: [], mood: 'neutral' };
+  }
+
+  // 验证歌曲：用网易云搜索 API 替换/补全 AI 返回的信息
+  if (Array.isArray(parsed.songs) && parsed.songs.length > 0) {
+    const verified = [];
+    for (const song of parsed.songs) {
+      if (!song.name) continue;
+      try {
+        const match = await findSong(song.name, song.artist);
+        if (match) {
+          verified.push({
+            id: match.id,
+            name: match.name,
+            artist: song.artist || match.artist,
+            album: match.album || '',
+            coverUrl: match.coverUrl || '',
+          });
+          console.log(`[song-verify] ✅ ${song.name} → id=${match.id}`);
+        } else {
+          // 搜索无结果，保留原始信息但标记不可播放
+          verified.push({ ...song, id: song.id || '', playable: false });
+          console.warn(`[song-verify] ⚠️ ${song.name} 未找到匹配`);
+        }
+      } catch (err) {
+        verified.push({ ...song, playable: false });
+        console.error(`[song-verify] ❌ ${song.name} 搜索失败:`, err.message);
+      }
+    }
+    parsed.songs = verified;
   }
 
   // 存对话历史
