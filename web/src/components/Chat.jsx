@@ -1,4 +1,4 @@
-// src/components/Chat.jsx — 聊天区域（Claudio 风格）
+// src/components/Chat.jsx — 聊天区域
 import { useRef, useEffect } from 'react';
 
 function formatMsgTime(date) {
@@ -9,13 +9,23 @@ function formatMsgTime(date) {
   });
 }
 
-function MessageBubble({ msg, onPlaySong }) {
+function MessageBubble({ msg, onPlaySong, onAddToQueue }) {
   const isUser = msg.role === 'user';
   const avatarEl = isUser ? (
     <img className="message__avatar" src="/avatar-user.jpg" alt="User" />
   ) : (
     <img className="message__avatar" src="/Treelio.jpg" alt="Treelio" />
   );
+
+  function handleSongClick(e, song) {
+    // 点击 "+" 按钮 → 入队，否则直接播放
+    if (e.target.closest('.song-card__add')) {
+      e.stopPropagation();
+      onAddToQueue?.(song);
+      return;
+    }
+    onPlaySong(song);
+  }
 
   return (
     <div className={`message message--${isUser ? 'user' : 'treelio'}`}>
@@ -26,16 +36,29 @@ function MessageBubble({ msg, onPlaySong }) {
           {msg.songs?.length > 0 && (
             <div className="message__songs">
               {msg.songs.map((song, i) => (
-                <div key={i} className="song-card" onClick={() => onPlaySong(song)}>
-                  <div className="song-card__play">
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
-                      <path d="M1 1l8 5-8 5V1z"/>
-                    </svg>
+                <div key={i} className="song-card" onClick={(e) => handleSongClick(e, song)}>
+                  <div className="song-card__cover">
+                    {song.coverUrl ? (
+                      <img src={song.coverUrl} alt="" className="song-card__cover-img" />
+                    ) : (
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
+                        <path d="M1 1l8 5-8 5V1z"/>
+                      </svg>
+                    )}
                   </div>
                   <div className="song-card__info">
                     <div className="song-card__name">{song.name}</div>
                     <div className="song-card__artist">{song.artist}</div>
                   </div>
+                  <button
+                    className="song-card__add"
+                    onClick={(e) => handleSongClick(e, song)}
+                    title="添加到队列"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
+                      <path d="M6 1v10M1 6h10"/>
+                    </svg>
+                  </button>
                 </div>
               ))}
             </div>
@@ -52,7 +75,7 @@ function MessageBubble({ msg, onPlaySong }) {
   );
 }
 
-export default function Chat({ messages, loading, onSend, onPlaySong }) {
+export default function Chat({ messages, loading, onSend, onPlaySong, onAddToQueue }) {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -87,7 +110,7 @@ export default function Chat({ messages, loading, onSend, onPlaySong }) {
           <div className="chat__empty">Say something to the DJ...</div>
         )}
         {messages.map(msg => (
-          <MessageBubble key={msg.id} msg={msg} onPlaySong={onPlaySong} />
+          <MessageBubble key={msg.id} msg={msg} onPlaySong={onPlaySong} onAddToQueue={onAddToQueue} />
         ))}
         {loading && (
           <div className="message message--treelio">

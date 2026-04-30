@@ -9,7 +9,7 @@ import Chat from './components/Chat';
 export default function App() {
   const { theme, toggle } = useTheme();
   const player = usePlayer();
-  const { messages, loading, sendMessage } = useChat(player.play);
+  const { messages, loading, sendMessage } = useChat(player.play, player.enqueueAndPlay);
 
   return (
     <div className="app">
@@ -29,7 +29,7 @@ export default function App() {
 
       {/* 时钟区域（带点阵背景） */}
       <section className="clock-section">
-        <PixelClock />
+        <PixelClock playing={player.playing} />
       </section>
 
       {/* 播放器条 */}
@@ -39,7 +39,13 @@ export default function App() {
 
       {/* 聊天区 */}
       <section className="chat">
-        <Chat messages={messages} loading={loading} onSend={sendMessage} onPlaySong={player.play} />
+        <Chat
+          messages={messages}
+          loading={loading}
+          onSend={sendMessage}
+          onPlaySong={player.play}
+          onAddToQueue={player.addToQueue}
+        />
       </section>
 
       {/* 底栏 */}
