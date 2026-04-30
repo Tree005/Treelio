@@ -1,9 +1,9 @@
-/* styles/globals.css — Treelio 设计系统 (Claudio-style) */
+/* styles/globals.css — Treelio 设计系统 (refined) */
 
 /* ====== 主题变量 ====== */
 :root,
 [data-theme='dark'] {
-  --bg: #0d0d0d;
+  --bg: #0a0a0a;
   --bg-elevated: #111111;
   --surface: #161616;
   --surface-hover: #1e1e1e;
@@ -11,39 +11,43 @@
   --text-secondary: #888888;
   --text-dim: #4a4a4a;
   --accent: #e8c547;
-  --accent-dim: rgba(232, 197, 71, 0.1);
+  --accent-dim: rgba(232, 197, 71, 0.08);
   --red: #c94040;
   --green: #4caf50;
-  --border: #1e1e1e;
+  --border: #1a1a1a;
+  --border-light: #222222;
   --input-bg: #111111;
-  --shadow: rgba(0, 0, 0, 0.6);
-  --msg-claudio: #1a1a1a;
-  --msg-user: #252015;
-  --scrollbar-track: #0d0d0d;
-  --scrollbar-thumb: #2a2a2a;
-  --grid-color: rgba(255, 255, 255, 0.03);
+  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.5);
+  --msg-claudio: #131313;
+  --msg-user: #1c1810;
+  --scrollbar-track: #0a0a0a;
+  --scrollbar-thumb: #222222;
+  --grid-color: rgba(255, 255, 255, 0.025);
 }
 
 [data-theme='light'] {
-  --bg: #f5f0e8;
-  --bg-elevated: #ece6da;
+  --bg: #faf8f2;
+  --bg-elevated: #f0ece0;
   --surface: #ffffff;
-  --surface-hover: #f0ebe0;
+  --surface-hover: #f7f4ea;
   --text: #1a1a1a;
   --text-secondary: #666666;
   --text-dim: #aaaaaa;
-  --accent: #c4960c;
-  --accent-dim: rgba(196, 150, 12, 0.1);
+  --accent: #b8960a;
+  --accent-dim: rgba(184, 150, 10, 0.08);
   --red: #c94040;
   --green: #4caf50;
-  --border: #e0d8c8;
+  --border: #e2ddd0;
+  --border-light: #ede8da;
   --input-bg: #ffffff;
-  --shadow: rgba(0, 0, 0, 0.08);
+  --shadow: rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.08);
   --msg-claudio: #ffffff;
-  --msg-user: #f0ebe0;
-  --scrollbar-track: #ece6da;
+  --msg-user: #f5f0e0;
+  --scrollbar-track: #f0ece0;
   --scrollbar-thumb: #ccc5b5;
-  --grid-color: rgba(0, 0, 0, 0.04);
+  --grid-color: rgba(0, 0, 0, 0.03);
 }
 
 /* ====== 全局重置 ====== */
@@ -67,7 +71,7 @@ body {
   color: var(--text);
   min-height: 100vh;
   line-height: 1.5;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background 0.4s ease, color 0.4s ease;
 }
 
 /* 自定义滚动条 */
@@ -102,7 +106,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -110,26 +114,27 @@ body {
 .top-bar__logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .top-bar__avatar {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
+  object-fit: cover;
 }
 
 .top-bar__logo span {
   font-family: 'VT323', monospace;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 400;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--text);
 }
 
 .top-bar__actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
 }
 
@@ -137,13 +142,13 @@ body {
   background: none;
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   color: var(--text-secondary);
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
   text-transform: uppercase;
   font-family: 'Inter', sans-serif;
 }
@@ -158,13 +163,13 @@ body {
   background: none;
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   color: var(--text-secondary);
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
   text-transform: uppercase;
   font-family: 'Inter', sans-serif;
 }
@@ -174,44 +179,43 @@ body {
   color: var(--accent);
 }
 
-/* ====== 时钟区域（带点阵背景） ====== */
+/* ====== 时钟区域 ====== */
 .clock-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 28px 20px 20px;
+  padding: 32px 20px 24px;
   flex-shrink: 0;
   position: relative;
-  /* 点阵网格背景 */
   background-image:
     radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
-  background-size: 16px 16px;
+  background-size: 18px 18px;
   background-position: center center;
 }
 
 .clock-time {
   font-family: 'VT323', monospace;
-  font-size: 80px;
+  font-size: 72px;
   line-height: 1;
   color: var(--text);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 .clock-date {
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-dim);
-  margin-top: 2px;
+  margin-top: 4px;
   text-align: center;
   line-height: 1.6;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 .on-air {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: 12px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.2em;
@@ -235,7 +239,7 @@ body {
 .on-air--active .on-air__dot {
   background: var(--green);
   animation: pulse 2s infinite;
-  box-shadow: 0 0 6px var(--green);
+  box-shadow: 0 0 8px var(--green);
 }
 
 @keyframes pulse {
@@ -245,22 +249,28 @@ body {
 
 /* ====== 播放器 ====== */
 .player {
-  padding: 0 12px;
+  padding: 0 14px;
   flex-shrink: 0;
 }
 
 .player__card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 14px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: var(--shadow-elevated);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* 主行：所有元素横排 */
+.player__card:hover {
+  border-color: var(--border-light);
+}
+
+/* 主行 */
 .player__main-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 /* 频谱动画 */
@@ -268,7 +278,7 @@ body {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 16px;
+  height: 18px;
   flex-shrink: 0;
   padding: 0 4px;
 }
@@ -278,6 +288,7 @@ body {
   background: var(--accent);
   border-radius: 1px;
   animation: wave 1.2s ease-in-out infinite;
+  transition: background 0.3s ease;
 }
 
 .player__wave-bar:nth-child(1) { height: 30%; animation-delay: 0s; }
@@ -288,7 +299,7 @@ body {
 .player__wave--idle .player__wave-bar {
   animation: none;
   height: 25%;
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
 @keyframes wave {
@@ -302,19 +313,19 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   overflow: hidden;
 }
 
 .player__song-name {
   font-family: 'VT323', monospace;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text);
   letter-spacing: 0.04em;
   line-height: 1;
   overflow: hidden;
   position: relative;
-  height: 18px;
+  height: 20px;
 }
 
 .player__song-name-inner {
@@ -323,12 +334,10 @@ body {
   animation: none;
 }
 
-/* 内容溢出时启动滚动 */
 .player__song-name--scroll .player__song-name-inner {
   animation: marquee 120s linear infinite;
 }
 
-/* 暂停播放时滚动也停 */
 .player__song-name--pause .player__song-name-inner {
   animation-play-state: paused;
 }
@@ -340,7 +349,7 @@ body {
 
 .player__song-status {
   font-family: 'VT323', monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--accent);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -351,7 +360,7 @@ body {
 .player__controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -363,22 +372,28 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
   padding: 0;
 }
 
-.player__btn:hover {
+.player__btn:hover:not(:disabled) {
   color: var(--text);
 }
 
-.player__btn--circle {
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--text-secondary);
-  border-radius: 50%;
+.player__btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
 }
 
-.player__btn--circle:hover {
+.player__btn--circle {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  transition: all 0.25s ease;
+}
+
+.player__btn--circle:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -392,18 +407,18 @@ body {
 .player__tags {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
 .player__tag {
   font-family: 'VT323', monospace;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-dim);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
   user-select: none;
   line-height: 1;
 }
@@ -423,7 +438,7 @@ body {
 
 /* 音量滑块 */
 .player__vol-slider {
-  width: 60px;
+  width: 56px;
   flex-shrink: 0;
   cursor: pointer;
   padding: 8px 0;
@@ -453,22 +468,23 @@ body {
   top: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
+  transition: background 0.2s;
 }
 
 /* 底部进度行 */
 .player__progress-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .player__time {
   font-family: 'VT323', monospace;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-dim);
   flex-shrink: 0;
-  min-width: 32px;
+  min-width: 36px;
   line-height: 1;
 }
 
@@ -478,20 +494,24 @@ body {
 
 .player__progress-bar {
   flex: 1;
-  height: 2px;
+  height: 3px;
   background: var(--border);
-  border-radius: 1px;
+  border-radius: 1.5px;
   cursor: pointer;
   position: relative;
+  transition: height 0.15s ease;
+}
+
+.player__progress-bar:hover {
+  height: 5px;
 }
 
 .player__progress-fill {
   height: 100%;
   background: var(--accent);
-  border-radius: 1px;
+  border-radius: 1.5px;
   transition: width 0.3s linear;
 }
-
 
 /* ====== 聊天区域 ====== */
 .chat {
@@ -505,7 +525,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: 10px 18px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -514,7 +534,7 @@ body {
 .chat__header-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .chat__dj-dot {
@@ -526,7 +546,7 @@ body {
 }
 
 .chat__dj-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
 }
@@ -548,10 +568,10 @@ body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 12px 16px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .chat__empty {
@@ -564,8 +584,14 @@ body {
 /* ====== 消息气泡 ====== */
 .message {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   max-width: 85%;
+  animation: msg-in 0.3s ease;
+}
+
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .message--user {
@@ -574,8 +600,8 @@ body {
 }
 
 .message__avatar {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   flex-shrink: 0;
   object-fit: cover;
@@ -595,28 +621,29 @@ body {
 .message__body {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .message__bubble {
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
   word-break: break-word;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .message--treelio .message__bubble {
   background: var(--msg-claudio);
   border: 1px solid var(--border);
   color: var(--text);
-  border-top-left-radius: 3px;
+  border-top-left-radius: 4px;
 }
 
 .message--user .message__bubble {
   background: var(--msg-user);
   color: var(--text);
-  border-top-right-radius: 3px;
+  border-top-right-radius: 4px;
 }
 
 .message__meta {
@@ -641,7 +668,8 @@ body {
   letter-spacing: 0.1em;
   color: var(--text-dim);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
+  text-transform: uppercase;
 }
 
 .message__replay:hover {
@@ -650,35 +678,37 @@ body {
 
 /* ====== 歌曲卡片 ====== */
 .message__songs {
-  margin-top: 6px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .song-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  gap: 10px;
+  padding: 8px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
 }
 
 .song-card:hover {
   border-color: var(--accent);
   background: var(--accent-dim);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-elevated);
 }
 
 .song-card__cover {
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
   overflow: hidden;
-  background: var(--surface);
+  background: var(--surface-hover);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -710,6 +740,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 1px;
 }
 
 .song-card__unplayable {
@@ -717,25 +748,27 @@ body {
   color: #e74c3c;
   background: rgba(231, 76, 60, 0.1);
   border-radius: 3px;
-  padding: 0 4px;
+  padding: 0 5px;
   margin-left: 4px;
   white-space: nowrap;
+  display: inline-block;
+  margin-top: 2px;
 }
 
 .song-card__add {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   color: var(--text-dim);
   cursor: pointer;
   border-radius: 4px;
   flex-shrink: 0;
-  opacity: 0.5;
-  transition: all 0.2s;
+  opacity: 0;
+  transition: all 0.25s ease;
 }
 
 .song-card:hover .song-card__add {
@@ -744,12 +777,12 @@ body {
 
 .song-card__add:hover {
   color: var(--accent);
-  background: var(--accent-dim, rgba(232, 197, 71, 0.15));
+  background: var(--accent-dim);
 }
 
 /* ====== 输入区域 ====== */
 .chat__input-area {
-  padding: 10px 16px;
+  padding: 12px 18px;
   border-top: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -757,16 +790,17 @@ body {
 .chat__input-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--input-bg);
   border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 6px 6px 6px 14px;
-  transition: border-color 0.2s;
+  border-radius: 24px;
+  padding: 8px 8px 8px 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .chat__input-wrap:focus-within {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .chat__input {
@@ -785,8 +819,8 @@ body {
 }
 
 .chat__mic {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: none;
   border: 1px solid var(--border);
@@ -796,17 +830,22 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
 }
 
 .chat__mic:disabled {
-  opacity: 0.3;
+  opacity: 0.25;
   cursor: not-allowed;
 }
 
+.chat__mic:not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .chat__send {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--accent);
   border: none;
@@ -816,11 +855,12 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s ease, transform 0.15s ease;
 }
 
-.chat__send:hover {
+.chat__send:hover:not(:disabled) {
   opacity: 0.85;
+  transform: scale(1.05);
 }
 
 .chat__send:disabled {
@@ -833,7 +873,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: 10px 18px;
   border-top: 1px solid var(--border);
   font-family: 'VT323', monospace;
   font-size: 13px;
@@ -846,19 +886,20 @@ body {
 .footer__status {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   color: var(--green);
   font-size: 10px;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 /* ====== 加载动画 ====== */
 .typing-indicator {
   display: flex;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 10px 14px;
 }
 
 .typing-indicator__dot {
@@ -883,6 +924,9 @@ body {
     max-width: 100%;
   }
   .clock-time {
-    font-size: 64px;
+    font-size: 56px;
+  }
+  .player__vol-slider {
+    width: 44px;
   }
 }
