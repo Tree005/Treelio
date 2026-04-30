@@ -31,7 +31,7 @@ export default function Player({
         </div>
         <div className="player__song-info">
           <div className="player__song-name">
-            {currentSong ? `${currentSong.name} - ${currentSong.artist}` : 'Claudio FM'}
+            {currentSong ? `${currentSong.name} - ${currentSong.artist}` : 'Treelio'}
           </div>
           {currentSong && (
             <div className="player__song-artist">{currentSong.album || ''}</div>

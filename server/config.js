@@ -1,5 +1,5 @@
 // server/config.js — 环境变量统一管理
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -9,6 +9,7 @@ const rootDir = resolve(__dirname, '..');
 function loadEnv() {
   const envPath = resolve(rootDir, '.env');
   const env = {};
+  if (!existsSync(envPath)) return env;
   const content = readFileSync(envPath, 'utf-8');
   for (const line of content.split('\n')) {
     const trimmed = line.trim();
@@ -47,5 +48,5 @@ export default {
 
   // 数据
   dataDir: resolve(rootDir, 'data'),
-  dbPath: resolve(rootDir, 'data', 'claudio.db'),
+  dbPath: resolve(rootDir, 'data', 'treelio.db'),
 };

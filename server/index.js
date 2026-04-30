@@ -6,6 +6,8 @@ import { existsSync } from 'fs';
 import { getDb, closeDb } from './db/index.js';
 import chatRouter from './api/chat.js';
 import musicRouter from './api/music.js';
+import weatherRouter from './api/weather.js';
+import playerRouter from './api/player.js';
 import errorHandler from './middleware/errorHandler.js';
 import config from './config.js';
 
@@ -22,6 +24,8 @@ app.use('/assets', express.static(resolve(config.dataDir)));
 // API 路由
 app.use('/api/chat', chatRouter);
 app.use('/api/music', musicRouter);
+app.use('/api/weather', weatherRouter);
+app.use('/api/player', playerRouter);
 
 // 生产模式：serve 前端构建产物
 const publicDir = resolve(__dirname, 'public');

@@ -1,4 +1,4 @@
-# Treelio — 架构方案 v1
+# Treelio — 架构方案 v2
 
 > 个人 AI 私人电台 | 全栈一体 · 长期可维护 · 可部署
 
@@ -8,11 +8,11 @@
 
 | 层 | 选型 | 理由 |
 |----|------|------|
-| **后端** | Node.js + Express + SQLite (better-sqlite3) | 单文件部署，零配置，备份=复制 |
+| **后端** | Node.js + Express + SQLite (sql.js) | 纯 JS 无需 C++ 编译，单文件部署，零配置，备份=复制 |
 | **前端** | React + Vite + PWA | 构建快，PWA 支持离线/桌面安装 |
 | **AI** | DeepSeek API (deepseek-chat / deepseek-reasoner) | 国内服务，无需代理 |
 | **音乐** | NeteaseCloudMusicApi 增强版 (localhost:3000) | 本地代理网易云接口 |
-| **样式** | CSS Modules / Tailwind | 暗色为主，像素风时钟，无渐变紫 |
+| **样式** | CSS (CSS 变量 + BEM 命名) | 暗色为主，像素风时钟，暖黄 accent |
 | **部署** | npm run build → 单进程部署 | 前端打包为静态文件，后端 serve |
 
 ## 2. 项目结构
@@ -26,70 +26,54 @@ treelio/
 │
 ├── server/                   # ===== 后端 =====
 │   ├── index.js              # Express 入口，启动 HTTP 服务
-│   ├── config.js             # 读 .env，统一配置导出
+│   ├── config.js             # 读 .env，统一配置导出（安全读取，缺 .env 不崩溃）
 │   ├── db/
-│   │   ├── index.js          # better-sqlite3 初始化
-│   │   ├── migrations/       # 数据库迁移脚本
-│   │   └── seed.js           # 初始数据填充
+│   │   └── index.js          # sql.js 初始化 + 迁移
 │   ├── api/                  # HTTP API 路由
 │   │   ├── chat.js           # POST /api/chat — 对话
 │   │   ├── music.js          # GET /api/music/search, /api/music/url, /api/music/lyric
-│   │   ├── player.js         # GET/POST /api/player — 播放状态
-│   │   └── weather.js        # GET /api/weather — 天气
+│   │   ├── weather.js        # GET /api/weather — 天气
+│   │   └── player.js         # POST /api/player/history, GET /api/player/history — 播放历史
 │   ├── services/             # 业务逻辑（不直接处理 HTTP）
 │   │   ├── ai.js             # DeepSeek API 调用 + prompt 组装
 │   │   ├── netease.js        # 网易云 API 代理封装
-│   │   ├── weather.js        # 和风天气
-│   │   └── memory.js         # 对话历史 / 用户偏好读写
+│   │   └── weather.js        # 和风天气
 │   └── middleware/
 │       └── errorHandler.js   # 统一错误处理
 │
-├── web/                      # ===== 前端 (React + Vite + PWA) =====
+├── web/                      # ===== 前端 (React + Vite) =====
 │   ├── index.html
 │   ├── vite.config.js
-│   ├── public/
-│   │   ├── manifest.json     # PWA manifest
-│   │   └── sw.js             # Service Worker
 │   └── src/
 │       ├── main.jsx          # React 入口
-│       ├── App.jsx           # 根组件，路由 + 布局
+│       ├── App.jsx           # 根组件
 │       ├── components/
-│       │   ├── Chat/         # 聊天区域
-│       │   │   ├── ChatPanel.jsx
-│       │   │   ├── MessageBubble.jsx
-│       │   │   └── ChatInput.jsx
-│       │   ├── Player/       # 播放器
-│       │   │   ├── PlayerBar.jsx
-│       │   │   ├── ProgressBar.jsx
-│       │   │   └── Controls.jsx
-│       │   ├── Clock/        # 像素风时钟
-│       │   │   └── PixelClock.jsx
-│       │   └── ThemeToggle/  # Dark/Light 切换
-│       │       └── ThemeToggle.jsx
+│       │   ├── Chat.jsx      # 聊天区域 + 消息气泡
+│       │   ├── Player.jsx    # 播放器（进度条、控制按钮、收藏）
+│       │   ├── PixelClock.jsx # 像素风时钟
+│       │   └── ThemeToggle.jsx # Dark/Light 切换
 │       ├── hooks/
-│       │   ├── useChat.js    # 对话状态 + API 调用
-│       │   ├── usePlayer.js  # 播放器状态
+│       │   ├── useChat.js    # 对话状态 + API 调用 + localStorage 持久化
+│       │   ├── usePlayer.js  # 播放器状态 + 收藏持久化 + 播放记录上报
 │       │   └── useTheme.js   # 主题切换
 │       ├── styles/
-│       │   ├── globals.css   # CSS 变量 / 基础样式
-│       │   ├── theme.css     # Dark/Light 主题定义
-│       │   └── clock.css     # 像素风时钟专用样式
+│       │   └── globals.css   # CSS 变量 + 主题 + BEM 样式
 │       └── utils/
 │           └── api.js        # fetch 封装，统一请求
 │
 ├── data/                     # ===== 数据 =====
-│   ├── treelio.db           # SQLite 数据库文件（git ignored）
-│   └── user-corpus.json      # 歌单导出（已存在）
+│   ├── treelio.db            # SQLite 数据库文件（git ignored）
+│   └── user-corpus.json      # 歌单导出（git ignored）
 │
 └── scripts/                  # ===== 工具脚本 =====
     └── export-netease.js     # 歌单导出（已存在）
 ```
 
-## 3. 数据库设计 (SQLite)
+## 3. 数据库设计 (SQLite / sql.js)
 
 ```sql
 -- 对话历史
-CREATE TABLE conversations (
+CREATE TABLE IF NOT EXISTS conversations (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   role        TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
   content     TEXT NOT NULL,
@@ -98,14 +82,14 @@ CREATE TABLE conversations (
 );
 
 -- 用户偏好（品味标签、收听统计）
-CREATE TABLE user_profile (
+CREATE TABLE IF NOT EXISTS user_profile (
   key         TEXT PRIMARY KEY,
   value       TEXT NOT NULL,  -- JSON
   updated_at  TEXT DEFAULT (datetime('now', 'localtime'))
 );
 
 -- 播放历史
-CREATE TABLE play_history (
+CREATE TABLE IF NOT EXISTS play_history (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   song_id     TEXT NOT NULL,  -- 网易云 song id
   song_name   TEXT,
@@ -114,42 +98,62 @@ CREATE TABLE play_history (
 );
 ```
 
+> **表使用状态**：
+> - `conversations` — 已使用（AI 对话存储）
+> - `user_profile` — 已建表，待接入 Profile 品味标签功能
+> - `play_history` — 已使用（播放成功后自动写入）
+
 ## 4. 核心 API 设计
 
 ### 4.1 对话 `POST /api/chat`
 
 ```
-请求: { message: "来点放松的", context: { weather, time, mood? } }
+请求: { message: "来点放松的" }
 响应: {
   reply: "给你挑了几首...",
-  songs: [{ id, name, artist, album, coverUrl, duration }],
-  mood: "chill",
-  narration: "下午三点，阳光正好..."   // 可选 DJ 播报文本
+  songs: [{ id, name, artist, album, coverUrl, duration, url? }],
+  mood: "chill"
 }
 ```
 
 流程：
-1. 用户消息 → 组装 prompt（系统提示 + 天气/时间上下文 + 对话历史 + 用户品味）
-2. 调用 DeepSeek API → 返回结构化 JSON
-3. 如果推荐了歌曲 → 调用网易云获取播放 URL
-4. 存对话历史到 SQLite
-5. 返回前端
+1. 用户消息 → 获取天气上下文
+2. 组装 prompt（系统提示 + 天气/时间 + 对话历史）
+3. 调用 DeepSeek API → 返回结构化 JSON
+4. 如果推荐了歌曲 → 调用网易云获取播放 URL
+5. 兜底：AI 提到《歌名》但 songs 为空时自动搜索
+6. 返回前端
 
-### 4.2 音乐 `GET /api/music/search?q=xxx`
+### 4.2 音乐搜索 `GET /api/music/search?q=xxx&limit=10`
 
 代理到 NeteaseCloudMusicApi `/cloudsearch`，返回搜索结果。
 
-### 4.3 播放 `GET /api/music/url?id=xxx`
+### 4.3 播放 URL `GET /api/music/url?id=xxx`
 
 代理到 NeteaseCloudMusicApi `/song/url`，返回 mp3 链接。
 
-### 4.4 天气 `GET /api/weather?location=xxx`
+### 4.4 歌词 `GET /api/music/lyric?id=xxx`
 
-调用和风天气 API，返回当前天气。
+代理到 NeteaseCloudMusicApi `/lyric`，返回歌词文本。
+
+### 4.5 天气 `GET /api/weather?location=xxx`
+
+调用和风天气 API，返回当前天气文本（如 "晴 25°C"）。
+
+### 4.6 播放历史 `POST /api/player/history`
+
+```
+请求: { songId, songName, artist }
+响应: { ok: true }
+```
+
+### 4.7 播放历史查询 `GET /api/player/history`
+
+```
+响应: { history: [{ id, songId, songName, artist, playedAt }] }
+```
 
 ## 5. AI Prompt 架构
-
-从截图中的 6 片 prompt 结构，简化为 MVP 版：
 
 ```
 System Prompt 组装顺序：
@@ -179,11 +183,11 @@ System Prompt 组装顺序：
 └─────────────────────────────────────┘
 ```
 
-**关键**：不依赖 DeepSeek 的 function calling，用 prompt 约束 JSON 输出格式。后端 parse JSON，如果推荐歌曲则自动获取播放 URL。
+**关键**：不依赖 DeepSeek 的 function calling，用 prompt 约束 JSON 输出格式。后端 parse JSON，如果推荐歌曲则自动获取播放 URL。推荐歌曲必须填入 songs 数组，后端有《歌名》提取兜底。
 
 ## 6. 前端设计原则
 
-### 配色（无渐变紫，去 AI 味）
+### 配色（复古电台 + 极简）
 
 ```
 Dark Mode:
@@ -206,66 +210,46 @@ Light Mode:
 
 核心调性：**复古电台 + 极简**，不是科技感，是温暖感。
 
-### 布局（对应截图）
+### 布局
 
-从上到下纵向排列，单栏居中布局，电台感强烈：
+从上到下纵向排列，单栏居中，app 容器 `height: 100vh` + `overflow: hidden`，聊天区内部滚动：
 
 ```
 ┌──────────────────────────────────────┐
-│  🎙 TREELIO              [DARK]      │  ← 顶栏：Logo + 主题切换
+│  🎙 TREELIO              [DARK]      │  ← 顶栏
 ├──────────────────────────────────────┤
-│                                      │
-│            21:11                     │  ← 像素时钟（居中，超大）
+│            21:11                     │  ← 像素时钟 (VT323)
 │           Monday                     │
 │          20 APR 2026                 │
-│           ● ON AIR                   │  ← 绿色指示灯
-│                                      │
+│           ● ON AIR                   │
 ├──────────────────────────────────────┤
 │  ┌─ Player ────────────────────────┐ │
-│  │ ≋ If - Bread                    │ │  ← 波形/封面 + 歌名
-│  │ PLAYING                         │  ← 播放状态文字
-│  │ 0:01 ════════════ 3:26         │  ← 进度条
-│  │ ◄◄  ▌▌  ►►  ♥  🔊             │ │  ← 控制按钮
+│  │ ≋ If - Bread                    │ │
+│  │ PLAYING  |  0:01 ════ 3:26     │ │
+│  │ ◄◄  ▌▌  ►►  ♥  🔊             │ │
 │  └─────────────────────────────────┘ │
 ├──────────────────────────────────────┤
-│  ● Treelio                      LIVE │  ← 聊天区标题
-│  Connected to Treelio server         │
-│                                      │
-│  ┌─ Treelio 头像 ──────────────────┐ │
-│  │ 这是 Treelio，深夜了...         │ │  ← DJ 播报气泡
+│  聊天区（可滚动）                    │
+│  ┌─────────────────────────────────┐ │
+│  │ Treelio 气泡                    │ │
+│  │ 用户气泡                         │ │
+│  │ ...                              │ │
 │  └─────────────────────────────────┘ │
-│  21:02  ▶ REPLAY                     │
-│                                      │
-│  Now playing: If - Bread             │  ← 播放提示
-│                                      │
-│  ┌─ 用户头像 ──────────────────────┐ │
-│  │ 好听                            │ │  ← 用户消息
-│  └─────────────────────────────────┘ │
-│                                      │
 │  ┌─ Input ─────────────────────────┐ │
-│  │ Say something...          🎤  ➤ │ │  ← 输入框 + 语音(后续) + 发送
+│  │ Say something...            ➤  │ │
 │  └─────────────────────────────────┘ │
-├──────────────────────────────────────┤
-│  TREELIO FM              CONNECTED   │  ← 底栏
 └──────────────────────────────────────┘
 ```
 
-**关键细节**：
-- 时钟居中，非顶栏；日期/星期/ON AIR 指示灯在时钟下方
-- 播放器显示波形动画、进度条、完整控制
-- 聊天消息带头像气泡（Treelio 用自定义头像，用户用默认头像）
-- 用户头像文件：`data/耳机头.jpg`
-- MVP 不做 QUEUE 播放队列，只做"当前播放 + 聊天"
-- 输入框预留语音按钮位置（后续 Fish Audio TTS）
+### 字体
 
-### 像素时钟
-
-用 CSS 或 SVG 实现，不需要图片。字体可用 Google Fonts 的 "Press Start 2P" 或 "VT323"。
+- **VT323** — 像素风时钟显示（Google Fonts）
+- **Inter** — 正文（Google Fonts）
 
 ## 7. 部署路径
 
 ```
-开发:  npm run dev          → Vite dev server (3001) + Express (8080)，Vite 代理 /api 到 Express
+开发:  npm run dev          → Vite dev server (5173) + Express (8080)，Vite 代理 /api 到 Express
 构建:  npm run build        → Vite 打包到 server/public/
 生产:  npm run start        → 单个 Node 进程，Express serve 静态文件 + API
 ```
@@ -278,33 +262,13 @@ Light Mode:
 5. PM2 守护进程，Nginx 反代 HTTPS
 6. PWA 支持直接添加到手机桌面
 
-## 8. MVP 范围（第一期）
-
-### 做什么
-- [x] 数据准备：歌单语料导出（已完成）
-- [ ] 后端骨架：Express + SQLite + DeepSeek 对话
-- [ ] 网易云代理：搜索 + 获取播放 URL
-- [ ] 前端界面：聊天 + 播放器 + 时钟
-- [ ] AI 推荐：根据用户消息推荐歌曲
-- [ ] Dark/Light 主题
-
-### 不做（后续迭代）
-- 飞书日历集成
-- TTS 语音播报（Fish Audio）
-- UPnP 推音响
-- Profile 品味标签页
-- 播放历史统计
-- CLI 调用方式（AI 优先用 API）
-
-## 9. 依赖清单
+## 8. 依赖清单
 
 ### 后端
 ```
 express              # HTTP 框架
-better-sqlite3       # SQLite（同步 API，简单可靠）
-dotenv               # .env 解析
-node-fetch           # HTTP 请求（DeepSeek / 天气）
-cors                 # 跨域（开发时用）
+sql.js               # SQLite（纯 JS，无需 C++ 编译）
+node-fetch           # HTTP 请求（DeepSeek / 天气 / 网易云）
 ```
 
 ### 前端
@@ -319,17 +283,30 @@ vite                 # 构建工具
 concurrently         # 同时跑前后端
 ```
 
----
+## 9. 前端状态持久化
 
-## 10. 启动命令（最终）
+| 数据 | 存储方式 | key |
+|------|----------|-----|
+| 聊天记录 | localStorage | `treelio-chat-messages` |
+| 收藏歌曲 | localStorage | `treelio-liked-songs` |
 
-```bash
-# 开发（前后端同时启动）
-npm run dev
+## 10. MVP 范围（第一期）— 已完成
 
-# 构建（前端打包到 server/public）
-npm run build
+- [x] 数据准备：歌单语料导出
+- [x] 后端骨架：Express + sql.js + DeepSeek 对话
+- [x] 网易云代理：搜索 + 获取播放 URL + 歌词
+- [x] 前端界面：聊天 + 播放器 + 时钟 + 主题切换
+- [x] AI 推荐：根据用户消息推荐歌曲（prompt 强化 + 兜底搜索）
+- [x] Dark/Light 主题
+- [x] 播放历史记录
+- [x] 收藏状态持久化
+- [x] 天气 API 路由
 
-# 生产启动
-npm run start
-```
+### 后续迭代
+- 飞书日历集成
+- TTS 语音播报（Fish Audio）
+- UPnP 推音响
+- Profile 品味标签页（user_profile 表待写入）
+- 播放历史统计页面
+- PWA manifest + Service Worker
+- CLI 调用方式（AI 优先用 API）

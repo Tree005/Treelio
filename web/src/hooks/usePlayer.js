@@ -2,6 +2,21 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { api } from '../utils/api';
 
+const LIKED_KEY = 'treelio-liked-songs';
+
+function loadLikedSongs() {
+  try {
+    const raw = localStorage.getItem(LIKED_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function saveLikedSongs(set) {
+  localStorage.setItem(LIKED_KEY, JSON.stringify([...set]));
+}
+
 function formatTime(ms) {
   if (!ms || isNaN(ms)) return '0:00';
   const totalSec = Math.floor(ms / 1000);
@@ -17,6 +32,7 @@ export function usePlayer() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [liked, setLiked] = useState(false);
+  const likedSetRef = useRef(loadLikedSongs());
 
   // 初始化 audio 元素
   useEffect(() => {
@@ -69,7 +85,12 @@ export function usePlayer() {
       setPlaying(true);
       setCurrentTime(0);
       setCurrentSong({ ...song, url });
-      setLiked(false);
+      const isLiked = song.id && likedSetRef.current.has(String(song.id));
+      setLiked(isLiked);
+      // 上报播放记录（静默，不影响播放）
+      if (song.id) {
+        api.reportPlay(String(song.id), song.name, song.artist).catch(() => {});
+      }
     }).catch(err => {
       console.error('播放失败:', err);
     });
@@ -92,8 +113,17 @@ export function usePlayer() {
   }, []);
 
   const toggleLike = useCallback(() => {
+    const songId = audioRef.current?.src && currentSong?.id ? String(currentSong.id) : null;
+    if (songId) {
+      if (likedSetRef.current.has(songId)) {
+        likedSetRef.current.delete(songId);
+      } else {
+        likedSetRef.current.add(songId);
+      }
+      saveLikedSongs(likedSetRef.current);
+    }
     setLiked(v => !v);
-  }, []);
+  }, [currentSong]);
 
   return {
     currentSong,

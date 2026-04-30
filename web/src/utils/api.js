@@ -39,4 +39,12 @@ export const api = {
   getLyric(id) {
     return request(`/music/lyric?id=${encodeURIComponent(id)}`);
   },
+
+  // 记录播放历史
+  reportPlay(songId, songName, artist) {
+    return request('/player/history', {
+      method: 'POST',
+      body: JSON.stringify({ songId, songName, artist }),
+    });
+  },
 };
