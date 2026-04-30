@@ -45,15 +45,18 @@ ${corpusSummary}
   "mood": "当前氛围标签，如 chill, focus, energetic, melancholy, romantic"
 }
 
-规则：
+示例（推荐多首歌的正确格式）：
+{"reply":"今天适合点慵懒的。《Summertime Sadness》Lana 的经典，加上《Coffee》beabadoobee 的温暖，再配一首《Redbone》增加点律动。","songs":[{"name":"Summertime Sadness","artist":"Lana Del Rey","id":"167876"},{"name":"Coffee","artist":"beabadoobee","id":"1462774166"},{"name":"Redbone","artist":"Childish Gambino","id":"435981049"}],"mood":"chill"}
+
+重要规则（必须严格遵守）：
 - reply 是必须的，songs 是可选的（只有推荐歌曲时才填）
-- **当你推荐歌曲时，必须同时将歌曲信息填入 songs 数组**，光在 reply 文字里提到歌名不够
-- **如果你在 reply 里提到了多首歌，songs 数组必须包含所有提到的歌，不能遗漏**
-- 每首歌给出 name、artist，如果有网易云 ID 也给上
+- **默认推荐 2-3 首歌，让用户有选择的余地**。只有用户明确说"就一首"或"来一首"时才推 1 首
+- **songs 数组必须包含你在 reply 中提到的每一首歌，一个都不能漏。这是硬性要求**
+- 每首歌给出 name、artist，id 可以留空（系统会自动匹配）
 - 如果用户明确要求播放某首歌，必须把那首歌放进 songs 数组
 - 如果用户没要推荐歌，songs 填空数组 []
-- mood 始终给出一个
-- 不要假装"正在播放"某首歌，除非你确实把它放进 songs 数组里了`;
+- 不要假装"正在播放"某首歌，除非你确实把它放进 songs 数组里了
+- mood 始终给出一个`;
 
 export async function chat(userMessage, context = {}) {
   const db = await getDb();
@@ -96,7 +99,7 @@ export async function chat(userMessage, context = {}) {
       model: config.deepseek.model,
       messages,
       temperature: 0.8,
-      max_tokens: 1000,
+      max_tokens: 1500,
     }),
   });
 
@@ -107,6 +110,7 @@ export async function chat(userMessage, context = {}) {
 
   const data = await response.json();
   const content = data.choices[0]?.message?.content || '';
+  console.log('[ai-raw]', content.substring(0, 500));
 
   // 解析 JSON（尝试去除可能的 markdown code block）
   let parsed;
@@ -118,7 +122,26 @@ export async function chat(userMessage, context = {}) {
     parsed = { reply: content, songs: [], mood: 'neutral' };
   }
 
-  // 验证歌曲：用网易云搜索 API 替换 AI 编造的 ID
+  // 兜底：从 reply 文本中提取歌名，补充到 songs 数组
+  const replyText = parsed.reply || '';
+  const mentionedNames = new Set();
+
+  // 匹配《歌名》格式
+  (replyText.match(/《(.+?)》/g) || []).forEach(m => mentionedNames.add(m.slice(1, -1)));
+  // 匹配引号格式：「」 " " ' ' \u201c\u201d
+  (replyText.match(/["「'\u201c](.+?)["」'\u201d]/g) || []).forEach(m => mentionedNames.add(m.slice(1, -1)));
+
+  if (mentionedNames.size > 0 && Array.isArray(parsed.songs)) {
+    const existingNames = new Set(parsed.songs.map(s => (s.name || '').toLowerCase()));
+    for (const name of mentionedNames) {
+      if (existingNames.has(name.toLowerCase())) continue;
+      if (name.length < 2) continue;
+      parsed.songs.push({ name, artist: '', _extracted: true });
+      console.log(`[song-extract] 📌 从文本提取: ${name}`);
+    }
+  }
+
+  // 验证歌曲：用网易云搜索 API 替换 AI 编造的 ID（含兜底提取的歌）
   if (Array.isArray(parsed.songs) && parsed.songs.length > 0) {
     const verified = [];
     for (const song of parsed.songs) {
