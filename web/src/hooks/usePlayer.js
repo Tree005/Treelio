@@ -48,7 +48,11 @@ function formatTime(ms) {
 export function usePlayer() {
   const audioRef = useRef(null);
   const currentSongRef = useRef(null);
-  const [currentSong, setCurrentSong] = useState(null);
+  const [currentSong, setCurrentSong] = useState(() => {
+    const { queue: q, index } = loadQueue();
+    if (index >= 0 && index < q.length) return q[index];
+    return null;
+  });
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -71,6 +75,13 @@ export function usePlayer() {
   useEffect(() => {
     saveQueueData(queue, queueIndex);
   }, [queue, queueIndex]);
+
+  // 保持 currentSongRef 与 currentSong 同步
+  useEffect(() => {
+    if (currentSong) {
+      currentSongRef.current = currentSong;
+    }
+  }, [currentSong]);
 
   // 内部：播放一首歌（共享逻辑，不改变队列）
   const playSong = useCallback(async (song) => {
@@ -193,6 +204,34 @@ export function usePlayer() {
     };
   }, [refreshAndResume, playSong]);
 
+  // 将歌曲插入队列当前位置+1并播放（点击聊天区歌曲卡片时用）
+  // 如果歌曲已在队列中，直接跳转播放（不去重插入）
+  const insertAndPlay = useCallback(async (song) => {
+    if (!song) return;
+    const songObj = {
+      id: song.id,
+      name: song.name,
+      artist: song.artist,
+      album: song.album,
+      coverUrl: song.coverUrl,
+      duration: song.duration,
+    };
+    const q = queueRef.current;
+    // 去重：如果已在队列中，直接跳转
+    const existingIndex = q.findIndex(s => String(s.id) === String(songObj.id));
+    if (existingIndex >= 0) {
+      setQueueIndex(existingIndex);
+      await playSong(q[existingIndex]);
+      return;
+    }
+    // 不在队列中，插入到当前位置+1
+    const currentIdx = queueIndexRef.current;
+    const newQueue = [...q.slice(0, currentIdx + 1), songObj, ...q.slice(currentIdx + 1)];
+    setQueue(newQueue);
+    setQueueIndex(currentIdx + 1);
+    await playSong(songObj);
+  }, [playSong]);
+
   // 直接播放一首歌（清空队列，重新开始）
   const play = useCallback(async (song) => {
     if (!song) return;
@@ -218,17 +257,28 @@ export function usePlayer() {
     await playSong(cleanSongs[0]);
   }, [playSong]);
 
-  // 添加歌曲到队列末尾
+  // 添加歌曲到队列末尾（兼容单个对象或数组，自动去重）
   const addToQueue = useCallback((songs) => {
-    if (!songs?.length) return;
-    const newSongs = songs.map(s => ({
-      id: s.id,
-      name: s.name,
-      artist: s.artist,
-      album: s.album,
-      coverUrl: s.coverUrl,
-      duration: s.duration,
-    }));
+    const list = Array.isArray(songs) ? songs : [songs];
+    if (list.length === 0) return;
+    const q = queueRef.current;
+    const existingIds = new Set(q.map(s => String(s.id)));
+    const newSongs = [];
+    for (const s of list) {
+      const id = String(s.id);
+      if (!existingIds.has(id)) {
+        existingIds.add(id);
+        newSongs.push({
+          id: s.id,
+          name: s.name,
+          artist: s.artist,
+          album: s.album,
+          coverUrl: s.coverUrl,
+          duration: s.duration,
+        });
+      }
+    }
+    if (newSongs.length === 0) return; // 全部已存在，跳过
     setQueue(prev => [...prev, ...newSongs]);
   }, []);
 
@@ -310,12 +360,18 @@ export function usePlayer() {
 
   const togglePlay = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio.src && !currentSongRef.current) return;
+    const song = currentSongRef.current;
+    if (!audio.src && !song) return;
 
     if (playing) {
       audio.pause();
       setPlaying(false);
     } else {
+      // 无 src 时先获取播放链接
+      if (!audio.src && song?.id) {
+        await playSong(song);
+        return;
+      }
       try {
         await audio.play();
         setPlaying(true);
@@ -324,7 +380,7 @@ export function usePlayer() {
         await refreshAndResume();
       }
     }
-  }, [playing, refreshAndResume]);
+  }, [playing, refreshAndResume, playSong]);
 
   const seek = useCallback((ratio) => {
     if (!audioRef.current.duration) return;
@@ -353,6 +409,7 @@ export function usePlayer() {
     liked,
     queue,
     queueIndex,
+    insertAndPlay,
     // 播放
     play,
     togglePlay,

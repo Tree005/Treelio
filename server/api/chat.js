@@ -1,22 +1,10 @@
 // server/api/chat.js — 对话 API
 import { Router } from 'express';
 import { chat as aiChat } from '../services/ai.js';
-import { findSong, getSongUrl, searchSongs } from '../services/netease.js';
+import { getSongUrl } from '../services/netease.js';
 import { getWeather } from '../services/weather.js';
 
 const router = Router();
-
-// 从 AI 回复文字中提取歌名（兜底：当 AI 提到歌但没填 songs 时）
-function extractSongNames(text) {
-  const names = [];
-  // 匹配《xxx》格式
-  const bookRegex = /《(.+?)》/g;
-  let match;
-  while ((match = bookRegex.exec(text)) !== null) {
-    names.push(match[1]);
-  }
-  return names;
-}
 
 // POST /api/chat
 router.post('/', async (req, res) => {
@@ -29,59 +17,24 @@ router.post('/', async (req, res) => {
     // 获取天气上下文
     const weather = await getWeather();
 
-    // 调用 AI
+    // 调用 AI（ai.js 内部已完成歌曲验证）
     const result = await aiChat(message, { weather });
 
-    // 如果 AI 推荐了歌曲，尝试获取播放信息
-    let songs = [];
+    // 对验证后的歌曲尝试获取播放 URL
+    const songs = [];
     if (result.songs && result.songs.length > 0) {
       for (const song of result.songs) {
-        try {
-          let found = null;
-          if (song.id) {
-            try {
-              const urlInfo = await getSongUrl(song.id);
-              found = { ...song, ...urlInfo };
-            } catch {
-              found = null;
-            }
+        const enriched = { ...song, playable: false };
+        if (song.id) {
+          try {
+            const urlInfo = await getSongUrl(song.id);
+            enriched.url = urlInfo.url;
+            enriched.playable = true;
+          } catch {
+            // 无版权，保留歌曲信息但不设 URL
           }
-          if (!found && song.name) {
-            found = await findSong(song.name, song.artist);
-            if (found) {
-              try {
-                const urlInfo = await getSongUrl(found.id);
-                found = { ...found, ...urlInfo };
-              } catch {
-                // VIP 或无版权，只返回搜索信息
-              }
-            }
-          }
-          if (found) songs.push(found);
-        } catch {
-          // 单首歌失败不影响整体
         }
-      }
-    }
-
-    // 兜底：AI 回复提到了歌名但 songs 为空时，提取第一个歌名去搜索
-    if (songs.length === 0) {
-      const mentioned = extractSongNames(result.reply);
-      if (mentioned.length > 0) {
-        try {
-          const found = await findSong(mentioned[0]);
-          if (found) {
-            try {
-              const urlInfo = await getSongUrl(found.id);
-              found = { ...found, ...urlInfo };
-            } catch {
-              // VIP 或无版权
-            }
-            songs.push(found);
-          }
-        } catch {
-          // 搜索失败不影响回复
-        }
+        songs.push(enriched);
       }
     }
 

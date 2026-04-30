@@ -678,11 +678,11 @@ body {
   height: 36px;
   border-radius: 4px;
   overflow: hidden;
+  background: var(--surface);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-dim, rgba(232, 197, 71, 0.15));
 }
 
 .song-card__cover-img {
@@ -712,6 +712,16 @@ body {
   text-overflow: ellipsis;
 }
 
+.song-card__unplayable {
+  font-size: 9px;
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
 .song-card__add {
   display: flex;
   align-items: center;
@@ -724,7 +734,7 @@ body {
   cursor: pointer;
   border-radius: 4px;
   flex-shrink: 0;
-  opacity: 0;
+  opacity: 0.5;
   transition: all 0.2s;
 }
 
