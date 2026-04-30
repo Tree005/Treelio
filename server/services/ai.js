@@ -45,25 +45,25 @@ ${corpusSummary}
   "mood": "当前氛围标签，如 chill, focus, energetic, melancholy, romantic"
 }
 
-规则（必须严格遵守，违反任何一条都是严重错误）：
+规则（必须遵守）：
 - reply 是必须的，songs 是可选的（只有推荐歌曲时才填）
-- **只要你推荐/提到了歌曲，必须把每一首都填入 songs 数组，不得在 reply 文字里只提歌名而不填数组**
-- **禁止偷懒**：即使用户只说"来几首"，你也必须填满 2-4 首，不得只填 1 首
-- **songs 数组里有的歌才能在 reply 里提到**，reply 里提到的歌必须也在 songs 里，二者必须一致
-- 每首歌给出 name、artist，有网易云 ID 的话给上 id 字段
+- **只要你推荐或提到歌曲，必须把每一首都填入 songs 数组，不得在 reply 里只提歌名而不填数组**
+- **即使用户只说"来几首"，songs 数组也必须包含 2-4 首，不得只填 1 首**
+- **songs 数组里有的歌才能在 reply 里提到**，reply 和 songs 必须一致
+- 每首歌给出 name、artist，如果你知道网易云 ID 就填 id 字段（不知道就不填，后端会帮你查）
 - 如果用户没要推荐歌，songs 填空数组 []
 - mood 始终给出一个
 - 不要假装"正在播放"某首歌，除非你确实把它放进 songs 数组里了
 
-如果你偷懒只填了一首，用户会非常失望。请务必把推荐的每一首都写进 songs 数组。
-
-## 示例（用户说「来几首适合写代码的」）
+## 示例
+用户："来几首适合写代码的"
+你应该返回（注意 songs 数组里有 3 首）：
 {
   "reply": "写代码需要点节奏感，这三首应该合适。",
   "songs": [
-    { "name": "Computer Love", "artist": "Zapp", "id": "123456" },
-    { "name": "Digital Love", "artist": "Daft Punk", "id": "234567" },
-    { "name": "Tron Legacy (End Titles)", "artist": "Daft Punk", "id": "345678" }
+    { "name": "Computer Love", "artist": "Zapp" },
+    { "name": "Digital Love", "artist": "Daft Punk" },
+    { "name": "Derezzed", "artist": "Daft Punk" }
   ],
   "mood": "focus"
 }`;
