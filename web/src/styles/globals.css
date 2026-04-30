@@ -87,11 +87,12 @@ body {
 .app {
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
   background: var(--bg);
+  overflow: hidden;
 }
 
 /* ====== 顶栏 ====== */
@@ -151,6 +152,7 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 32px 20px 24px;
+  flex-shrink: 0;
 }
 
 .clock-time {
@@ -198,6 +200,7 @@ body {
 /* ====== 播放器 ====== */
 .player {
   padding: 0 20px 20px;
+  flex-shrink: 0;
 }
 
 .player__card {
@@ -394,6 +397,7 @@ body {
 
 .chat__messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 16px 20px;
   display: flex;

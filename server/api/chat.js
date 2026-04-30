@@ -1,10 +1,22 @@
 // server/api/chat.js — 对话 API
 import { Router } from 'express';
 import { chat as aiChat } from '../services/ai.js';
-import { findSong, getSongUrl } from '../services/netease.js';
+import { findSong, getSongUrl, searchSongs } from '../services/netease.js';
 import { getWeather } from '../services/weather.js';
 
 const router = Router();
+
+// 从 AI 回复文字中提取歌名（兜底：当 AI 提到歌但没填 songs 时）
+function extractSongNames(text) {
+  const names = [];
+  // 匹配《xxx》格式
+  const bookRegex = /《(.+?)》/g;
+  let match;
+  while ((match = bookRegex.exec(text)) !== null) {
+    names.push(match[1]);
+  }
+  return names;
+}
 
 // POST /api/chat
 router.post('/', async (req, res) => {
@@ -25,7 +37,6 @@ router.post('/', async (req, res) => {
     if (result.songs && result.songs.length > 0) {
       for (const song of result.songs) {
         try {
-          // 先搜索匹配
           let found = null;
           if (song.id) {
             try {
@@ -49,6 +60,27 @@ router.post('/', async (req, res) => {
           if (found) songs.push(found);
         } catch {
           // 单首歌失败不影响整体
+        }
+      }
+    }
+
+    // 兜底：AI 回复提到了歌名但 songs 为空时，提取第一个歌名去搜索
+    if (songs.length === 0) {
+      const mentioned = extractSongNames(result.reply);
+      if (mentioned.length > 0) {
+        try {
+          const found = await findSong(mentioned[0]);
+          if (found) {
+            try {
+              const urlInfo = await getSongUrl(found.id);
+              found = { ...found, ...urlInfo };
+            } catch {
+              // VIP 或无版权
+            }
+            songs.push(found);
+          }
+        } catch {
+          // 搜索失败不影响回复
         }
       }
     }

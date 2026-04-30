@@ -46,9 +46,12 @@ ${corpusSummary}
 
 规则：
 - reply 是必须的，songs 是可选的（只有推荐歌曲时才填）
-- 如果你想推荐歌曲，尽量给出精确的 name 和 artist，id 可以后端帮你搜
+- **当你推荐歌曲时，必须同时将歌曲信息填入 songs 数组**，光在 reply 文字里提到歌名不够
+- 每首歌给出 name、artist，如果有网易云 ID 也给上
+- 如果用户明确要求播放某首歌，必须把那首歌放进 songs 数组
 - 如果用户没要推荐歌，songs 填空数组 []
-- mood 始终给出一个`;
+- mood 始终给出一个
+- 不要假装"正在播放"某首歌，除非你确实把它放进 songs 数组里了`;
 
 export async function chat(userMessage, context = {}) {
   const db = await getDb();

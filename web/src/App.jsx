@@ -42,7 +42,7 @@ export default function App() {
 
       {/* 聊天 */}
       <section className="chat">
-        <Chat messages={messages} loading={loading} onSend={sendMessage} />
+        <Chat messages={messages} loading={loading} onSend={sendMessage} onPlaySong={player.play} />
       </section>
 
       {/* 底栏 */}

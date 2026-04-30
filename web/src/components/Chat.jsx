@@ -47,7 +47,7 @@ function MessageBubble({ msg, onPlaySong }) {
   );
 }
 
-export default function Chat({ messages, loading, onSend }) {
+export default function Chat({ messages, loading, onSend, onPlaySong }) {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -81,7 +81,7 @@ export default function Chat({ messages, loading, onSend }) {
           <div className="now-playing">Say something to the DJ...</div>
         )}
         {messages.map(msg => (
-          <MessageBubble key={msg.id} msg={msg} onPlaySong={onSend} />
+          <MessageBubble key={msg.id} msg={msg} onPlaySong={onPlaySong} />
         ))}
         {loading && (
           <div className="message message--claudio">
