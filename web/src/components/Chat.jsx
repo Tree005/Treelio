@@ -17,16 +17,6 @@ function MessageBubble({ msg, onPlaySong, onAddToQueue }) {
     <img className="message__avatar" src="/Treelio.jpg" alt="Treelio" />
   );
 
-  function handleSongClick(e, song) {
-    // 点击 "+" 按钮 → 入队，否则直接播放
-    if (e.target.closest('.song-card__add')) {
-      e.stopPropagation();
-      onAddToQueue?.(song);
-      return;
-    }
-    onPlaySong(song);
-  }
-
   return (
     <div className={`message message--${isUser ? 'user' : 'treelio'}`}>
       {avatarEl}
@@ -36,7 +26,7 @@ function MessageBubble({ msg, onPlaySong, onAddToQueue }) {
           {msg.songs?.length > 0 && (
             <div className="message__songs">
               {msg.songs.map((song, i) => (
-                <div key={i} className="song-card" onClick={(e) => handleSongClick(e, song)}>
+                <div key={i} className="song-card" onClick={() => onPlaySong(song)}>
                   <div className="song-card__cover">
                     {song.coverUrl ? (
                       <img src={song.coverUrl} alt="" className="song-card__cover-img" />
@@ -52,7 +42,7 @@ function MessageBubble({ msg, onPlaySong, onAddToQueue }) {
                   </div>
                   <button
                     className="song-card__add"
-                    onClick={(e) => handleSongClick(e, song)}
+                    onClick={(e) => { e.stopPropagation(); onAddToQueue?.(song); }}
                     title="添加到队列"
                   >
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
