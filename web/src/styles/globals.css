@@ -673,16 +673,22 @@ body {
   background: var(--accent-dim);
 }
 
-.song-card__play {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #0a0a0a;
+.song-card__cover {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--surface);
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+}
+
+.song-card__cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .song-card__info {
@@ -706,6 +712,16 @@ body {
   text-overflow: ellipsis;
 }
 
+.song-card__unplayable {
+  font-size: 9px;
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
 .song-card__add {
   display: flex;
   align-items: center;
@@ -718,7 +734,7 @@ body {
   cursor: pointer;
   border-radius: 4px;
   flex-shrink: 0;
-  opacity: 0;
+  opacity: 0.5;
   transition: all 0.2s;
 }
 
