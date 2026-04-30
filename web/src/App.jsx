@@ -16,31 +16,28 @@ export default function App() {
       {/* 顶栏 */}
       <header className="top-bar">
         <div className="top-bar__logo">
-          <svg className="top-bar__logo-icon" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5"/>
-            <circle cx="10" cy="10" r="3" fill="currentColor"/>
-            <circle cx="10" cy="10" r="5" fill="currentColor" opacity="0.2"/>
-          </svg>
-          <span>TREELIO</span>
+          <img className="top-bar__avatar" src="/Treelio.jpg" alt="Treelio" />
+          <span>Treelio</span>
         </div>
         <div className="top-bar__actions">
+          <button className="top-bar__login">LOGIN</button>
           <button className="theme-toggle" onClick={toggle}>
             {theme === 'dark' ? 'LIGHT' : 'DARK'}
           </button>
         </div>
       </header>
 
-      {/* 时钟 */}
+      {/* 时钟区域（带点阵背景） */}
       <section className="clock-section">
         <PixelClock />
       </section>
 
-      {/* 播放器 */}
+      {/* 播放器条 */}
       <section className="player">
         <Player {...player} />
       </section>
 
-      {/* 聊天 */}
+      {/* 聊天区 */}
       <section className="chat">
         <Chat messages={messages} loading={loading} onSend={sendMessage} onPlaySong={player.play} />
       </section>

@@ -1,4 +1,4 @@
-// src/components/Chat.jsx — 聊天区域
+// src/components/Chat.jsx — 聊天区域（Claudio 风格）
 import { useRef, useEffect } from 'react';
 
 function formatMsgTime(date) {
@@ -14,21 +14,21 @@ function MessageBubble({ msg, onPlaySong }) {
   const avatarEl = isUser ? (
     <img className="message__avatar" src="/avatar-user.jpg" alt="User" />
   ) : (
-    <div className="message__avatar message__avatar--claudio">T</div>
+    <img className="message__avatar" src="/Treelio.jpg" alt="Treelio" />
   );
 
   return (
-    <div className={`message message--${isUser ? 'user' : 'claudio'}`}>
+    <div className={`message message--${isUser ? 'user' : 'treelio'}`}>
       {avatarEl}
       <div className="message__body">
         <div className="message__bubble">
           {msg.content}
           {msg.songs?.length > 0 && (
-            <div>
+            <div className="message__songs">
               {msg.songs.map((song, i) => (
                 <div key={i} className="song-card" onClick={() => onPlaySong(song)}>
                   <div className="song-card__play">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
                       <path d="M1 1l8 5-8 5V1z"/>
                     </svg>
                   </div>
@@ -41,7 +41,12 @@ function MessageBubble({ msg, onPlaySong }) {
             </div>
           )}
         </div>
-        <span className="message__time">{formatMsgTime(msg.time)}</span>
+        <div className="message__meta">
+          <span className="message__time">{formatMsgTime(msg.time)}</span>
+          {!isUser && (
+            <span className="message__replay">REPLAY</span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -69,6 +74,7 @@ export default function Chat({ messages, loading, onSend, onPlaySong }) {
       {/* 聊天头部 */}
       <div className="chat__header">
         <div className="chat__header-left">
+          <span className="chat__dj-dot" />
           <span className="chat__dj-name">Treelio</span>
           <span className="chat__live">LIVE</span>
         </div>
@@ -78,14 +84,14 @@ export default function Chat({ messages, loading, onSend, onPlaySong }) {
       {/* 消息列表 */}
       <div className="chat__messages">
         {messages.length === 0 && !loading && (
-          <div className="now-playing">Say something to the DJ...</div>
+          <div className="chat__empty">Say something to the DJ...</div>
         )}
         {messages.map(msg => (
           <MessageBubble key={msg.id} msg={msg} onPlaySong={onPlaySong} />
         ))}
         {loading && (
-          <div className="message message--claudio">
-            <div className="message__avatar message__avatar--claudio">T</div>
+          <div className="message message--treelio">
+            <img className="message__avatar" src="/Treelio.jpg" alt="Treelio" />
             <div className="message__body">
               <div className="message__bubble">
                 <div className="typing-indicator">
@@ -109,6 +115,11 @@ export default function Chat({ messages, loading, onSend, onPlaySong }) {
             placeholder="Say something to the DJ..."
             disabled={loading}
           />
+          <button className="chat__mic" type="button" disabled>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 1a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM5 7H3a5 5 0 0 0 10 0h-2a3 3 0 0 1-6 0zm3 6v2M6 15h4"/>
+            </svg>
+          </button>
           <button className="chat__send" type="submit" disabled={loading}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
               <path d="M1 1l14 7-14 7V9l10-1-10-1V1z"/>
