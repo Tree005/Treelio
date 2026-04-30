@@ -69,7 +69,6 @@ ${corpusSummary}
 }`;
 
 export async function chat(userMessage, context = {}) {
-  console.log(`[ai.js] chat() 被调用，message: "${userMessage?.slice(0,30)}..."`);
   const db = await getDb();
 
   // 读取最近 20 条对话历史
