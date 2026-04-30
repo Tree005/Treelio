@@ -10,10 +10,10 @@
   --text: #e0e0e0;
   --text-secondary: #888888;
   --text-dim: #4a4a4a;
-  --accent: #e8c547;
-  --accent-dim: rgba(232, 197, 71, 0.08);
-  --red: #c94040;
-  --green: #4caf50;
+  --accent: #00d4aa;
+  --accent-dim: rgba(0, 212, 170, 0.08);
+  --red: #ff4757;
+  --green: #00d4aa;
   --border: #1a1a1a;
   --border-light: #222222;
   --input-bg: #111111;
@@ -23,7 +23,7 @@
   --msg-user: #1c1810;
   --scrollbar-track: #0a0a0a;
   --scrollbar-thumb: #222222;
-  --grid-color: rgba(255, 255, 255, 0.025);
+  --grid-color: rgba(0, 212, 170, 0.015);
 }
 
 [data-theme='light'] {
@@ -34,10 +34,10 @@
   --text: #1a1a1a;
   --text-secondary: #666666;
   --text-dim: #aaaaaa;
-  --accent: #b8960a;
-  --accent-dim: rgba(184, 150, 10, 0.08);
-  --red: #c94040;
-  --green: #4caf50;
+  --accent: #00b894;
+  --accent-dim: rgba(0, 184, 148, 0.08);
+  --red: #ff4757;
+  --green: #00b894;
   --border: #e2ddd0;
   --border-light: #ede8da;
   --input-bg: #ffffff;
@@ -47,7 +47,7 @@
   --msg-user: #f5f0e0;
   --scrollbar-track: #f0ece0;
   --scrollbar-thumb: #ccc5b5;
-  --grid-color: rgba(0, 0, 0, 0.03);
+  --grid-color: rgba(0, 184, 148, 0.015);
 }
 
 /* ====== 全局重置 ====== */
@@ -97,6 +97,23 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+  background: var(--bg);
+  overflow: hidden;
+  background-image:
+    radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
+  background-size: 18px 18px;
+  background-position: center center;
+}
+
+/* ====== 主内容卡片容器 ====== */
+.app__card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
   background: var(--bg);
   overflow: hidden;
 }
@@ -256,7 +273,7 @@ body {
 .player__card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 12px 16px;
   box-shadow: var(--shadow-elevated);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -626,7 +643,7 @@ body {
 
 .message__bubble {
   padding: 10px 14px;
-  border-radius: 12px;
+  border-radius: 4px;
   font-size: 13px;
   line-height: 1.55;
   word-break: break-word;
@@ -637,13 +654,13 @@ body {
   background: var(--msg-claudio);
   border: 1px solid var(--border);
   color: var(--text);
-  border-top-left-radius: 4px;
+  border-top-left-radius: 0;
 }
 
 .message--user .message__bubble {
   background: var(--msg-user);
   color: var(--text);
-  border-top-right-radius: 4px;
+  border-top-right-radius: 0;
 }
 
 .message__meta {
@@ -691,7 +708,7 @@ body {
   padding: 8px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.25s ease;
 }
@@ -931,13 +948,41 @@ body {
   }
 }
 
-/* ====== Profile 页 ====== */
+/* ====== Profile 弹出层遮罩 ====== */
+.profile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 900;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ====== Profile 抽屉 ====== */
 .profile {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 85%;
+  max-width: 400px;
   height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--bg);
+  border-left: 1px solid var(--border);
+  z-index: 1000;
   overflow: hidden;
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
 }
 
 .profile__top-bar {
@@ -1091,8 +1136,7 @@ body {
   letter-spacing: 0.08em;
   padding: 4px 10px;
   border: 1px solid var(--border);
-  border-radius: 20px;
-  background: none;
+  border-radius: 2px;  background: none;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.25s ease;

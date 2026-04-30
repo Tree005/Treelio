@@ -17,46 +17,34 @@ const MOOD_TAGS = [
   'RAINY-DAY',
   'FOCUS',
   'WANDERING',
-  'NSTALGIC',
+  'NOSTALGIC',
 ];
 
-export default function Profile({ theme, onToggleTheme, onBack, player }) {
+export default function Profile({ theme, onToggleTheme, onClose, player }) {
   const [activeTag, setActiveTag] = useState(null);
   const [stats, setStats] = useState(null);
-  const avatarRef = useRef(null);
 
   useEffect(() => {
-    // 从后端获取听歌统计数据
     fetch('/api/profile/stats')
       .then(r => r.json())
-      .catch(() => null)
-      .then(data => {
-        if (data) setStats(data);
-      });
+      .then(setStats)
+      .catch(() => {});
   }, []);
 
   function handlePlayTag(tag) {
-    if (!player) return;
-    // 告诉 AI 播放这个风格的歌
     const msg = `来一首${tag.replace(/-/g, ' ').toLowerCase()}风格的歌`;
-    if (player.insertAndPlay) {
-      // 触发聊天发送
-      const input = document.querySelector('.chat__input');
-      if (input) {
-        input.value = msg;
-        input.form?.requestSubmit();
-      }
+    const input = document.querySelector('.chat__input');
+    if (input) {
+      input.value = msg;
+      input.form?.requestSubmit();
     }
   }
 
   return (
     <div className="profile">
-      {/* 顶部导航 */}
       <header className="profile__top-bar">
-        <button className="profile__back" onClick={onBack} title="返回">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M10 3L5 8l5 5"/>
-          </svg>
+        <button className="profile__back" onClick={onClose} title="返回">
+          ←
         </button>
         <span className="profile__top-title">PROFILE</span>
         <button className="theme-toggle" onClick={onToggleTheme}>
@@ -64,23 +52,13 @@ export default function Profile({ theme, onToggleTheme, onBack, player }) {
         </button>
       </header>
 
-      {/* 主体（可滚动） */}
       <div className="profile__body">
-        {/* 头像 + 名字 */}
         <div className="profile__hero">
-          <div className="profile__avatar-wrap">
-            <img
-              className="profile__avatar"
-              src="/Treelio.jpg"
-              alt="Treelio"
-            />
-            <div className="profile__avatar-ring" />
-          </div>
+          <img className="profile__avatar" src="/Treelio.jpg" alt="Treelio" />
           <h1 className="profile__name">TREELIO</h1>
           <p className="profile__tagline">一开机我就打碟</p>
         </div>
 
-        {/* 统计 */}
         <div className="profile__stats">
           <div className="profile__stat">
             <span className="profile__stat-num">{stats?.totalSongs ?? '--'}</span>
@@ -96,7 +74,6 @@ export default function Profile({ theme, onToggleTheme, onBack, player }) {
           </div>
         </div>
 
-        {/* 品味标签区 */}
         <section className="profile__section">
           <h2 className="profile__section-title">TASTE</h2>
           <div className="profile__tags">
@@ -112,7 +89,6 @@ export default function Profile({ theme, onToggleTheme, onBack, player }) {
           </div>
         </section>
 
-        {/* 心情标签区 */}
         <section className="profile__section">
           <h2 className="profile__section-title">MOODS</h2>
           <div className="profile__tags">
@@ -128,7 +104,6 @@ export default function Profile({ theme, onToggleTheme, onBack, player }) {
           </div>
         </section>
 
-        {/* 底部署名 */}
         <div className="profile__signature">
           TREELIO <span className="profile__sig-x">×</span> AI
         </div>
