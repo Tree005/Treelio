@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets
+.env
+.env.*
+
+# Database
+*.db
+data/*.db
+
+# Build output
+dist/
+server/public/
+
+# WorkBuddy private data (memory, skills, bootstrap)
+.workbuddy/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Large user data (not for repo)
+data/user-corpus.json
+data/耳机头.jpg
