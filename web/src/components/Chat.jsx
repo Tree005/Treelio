@@ -27,10 +27,14 @@ function MessageBubble({ msg, onPlaySong }) {
             <div className="message__songs">
               {msg.songs.map((song, i) => (
                 <div key={i} className="song-card" onClick={() => onPlaySong(song)}>
-                  <div className="song-card__play">
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
-                      <path d="M1 1l8 5-8 5V1z"/>
-                    </svg>
+                  <div className="song-card__cover">
+                    {song.coverUrl ? (
+                      <img src={song.coverUrl} alt="" className="song-card__cover-img" />
+                    ) : (
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
+                        <path d="M1 1l8 5-8 5V1z"/>
+                      </svg>
+                    )}
                   </div>
                   <div className="song-card__info">
                     <div className="song-card__name">{song.name}</div>
