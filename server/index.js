@@ -8,6 +8,7 @@ import chatRouter from './api/chat.js';
 import musicRouter from './api/music.js';
 import weatherRouter from './api/weather.js';
 import playerRouter from './api/player.js';
+import profileRouter from './api/profile.js';
 import errorHandler from './middleware/errorHandler.js';
 import config from './config.js';
 
@@ -26,6 +27,7 @@ app.use('/api/chat', chatRouter);
 app.use('/api/music', musicRouter);
 app.use('/api/weather', weatherRouter);
 app.use('/api/player', playerRouter);
+app.use('/api/profile', profileRouter);
 
 // 生产模式：serve 前端构建产物
 const publicDir = resolve(__dirname, 'public');
