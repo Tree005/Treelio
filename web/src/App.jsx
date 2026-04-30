@@ -43,7 +43,7 @@ export default function App() {
           messages={messages}
           loading={loading}
           onSend={sendMessage}
-          onPlaySong={player.play}
+          onPlaySong={player.insertAndPlay}
           onAddToQueue={player.addToQueue}
         />
       </section>
