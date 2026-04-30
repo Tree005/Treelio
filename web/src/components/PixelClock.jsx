@@ -1,7 +1,7 @@
 // src/components/PixelClock.jsx — 像素风时钟
 import { useState, useEffect } from 'react';
 
-export default function PixelClock() {
+export default function PixelClock({ playing = false }) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -30,9 +30,9 @@ export default function PixelClock() {
         <br />
         {dateStr}
       </div>
-      <div className="on-air">
+      <div className={`on-air${playing ? ' on-air--active' : ''}`}>
         <span className="on-air__dot" />
-        ON AIR
+        {playing ? 'ON AIR' : 'STANDBY'}
       </div>
     </>
   );

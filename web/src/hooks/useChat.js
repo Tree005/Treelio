@@ -9,7 +9,6 @@ function loadMessages() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    // 反序列化日期字符串
     return parsed.map(msg => ({
       ...msg,
       time: new Date(msg.time),
@@ -27,7 +26,7 @@ function saveMessages(messages) {
   }
 }
 
-export function useChat(onPlaySong) {
+export function useChat(onPlaySong, onEnqueueSongs) {
   const [messages, setMessages] = useState(loadMessages);
   const [loading, setLoading] = useState(false);
   const abortRef = useRef(null);
@@ -64,9 +63,9 @@ export function useChat(onPlaySong) {
 
       setMessages(prev => [...prev, claudioMsg]);
 
-      // 如果有推荐歌曲，自动播放第一首（usePlayer.play 会自动获取 url）
-      if (result.songs?.length > 0 && result.songs[0].id && onPlaySong) {
-        onPlaySong(result.songs[0]);
+      // AI 推荐歌曲 → 全部入队并播放第一首
+      if (result.songs?.length > 0 && result.songs[0].id && onEnqueueSongs) {
+        onEnqueueSongs(result.songs);
       }
     } catch (err) {
       const errMsg = {
@@ -79,7 +78,7 @@ export function useChat(onPlaySong) {
     } finally {
       setLoading(false);
     }
-  }, [loading, onPlaySong]);
+  }, [loading, onEnqueueSongs]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

@@ -1,4 +1,4 @@
-// src/components/Player.jsx — 播放器组件（Treelio 风格 - 精确复刻参考图）
+// src/components/Player.jsx — 播放器组件（Treelio 风格）
 import { useState, useRef, useEffect } from 'react';
 
 export default function Player({
@@ -7,15 +7,23 @@ export default function Player({
   currentTime,
   duration,
   liked,
+  queue,
+  queueIndex,
   togglePlay,
   seek,
   toggleLike,
+  playNext,
+  playPrevious,
+  stop,
   formatTime,
 }) {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const [vol, setVol] = useState(80);
   const songNameRef = useRef(null);
-  const animKeyRef = useRef(0); // 切歌时自增，强制重置动画
+  const animKeyRef = useRef(0);
+
+  const queueLen = queue?.length || 0;
+  const queuePos = queueIndex >= 0 ? queueIndex + 1 : 0;
 
   // 切歌时重置滚动动画
   useEffect(() => {
@@ -71,7 +79,7 @@ export default function Player({
 
         {/* 控制按钮组 */}
         <div className="player__controls">
-          <button className="player__btn player__btn--circle" title="上一首">
+          <button className="player__btn player__btn--circle" onClick={playPrevious} title="上一首" disabled={queueLen === 0}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
               <path d="M3 3h2v10H3V3zm10 0L6 8l7 5V3z"/>
             </svg>
@@ -87,12 +95,12 @@ export default function Player({
               </svg>
             )}
           </button>
-          <button className="player__btn player__btn--circle" title="下一首">
+          <button className="player__btn player__btn--circle" onClick={playNext} title="下一首" disabled={queueLen <= 1}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
               <path d="M11 3h2v10h-2V3zM3 3l7 5-7 5V3z"/>
             </svg>
           </button>
-          <button className="player__btn player__btn--circle" title="停止">
+          <button className="player__btn player__btn--circle" onClick={stop} title="停止" disabled={queueLen === 0}>
             <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
               <path d="M3 3h10v10H3V3z"/>
             </svg>
@@ -110,7 +118,11 @@ export default function Player({
 
         {/* 标签组 */}
         <div className="player__tags">
-          <span className="player__tag">HIDE</span>
+          {queueLen > 1 && (
+            <span className="player__tag player__tag--queue">
+              {queuePos}/{queueLen}
+            </span>
+          )}
           <span className={`player__tag ${liked ? 'player__tag--active' : ''}`}>FAV</span>
           <span className="player__tag">VOL</span>
         </div>
