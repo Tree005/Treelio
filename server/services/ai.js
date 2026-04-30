@@ -148,7 +148,6 @@ export async function chat(userMessage, context = {}) {
           });
           console.log(`[song-verify] ✅ ${song.name} → id=${match.id}`);
         } else {
-          // 搜索无结果，保留原始信息但标记不可播放
           verified.push({ ...song, id: song.id || '', playable: false });
           console.warn(`[song-verify] ⚠️ ${song.name} 未找到匹配`);
         }
@@ -158,6 +157,36 @@ export async function chat(userMessage, context = {}) {
       }
     }
     parsed.songs = verified;
+  }
+
+  // 兜底：从 reply 文字的《》中提取歌名，补全 songs（AI 偷懒不填数组时）
+  if (!parsed.songs || parsed.songs.length === 0) {
+    const bookRegex = /《(.+?)》/g;
+    const namesFromReply = [];
+    let m;
+    while ((m = bookRegex.exec(parsed.reply)) !== null) {
+      namesFromReply.push(m[1].trim());
+    }
+    if (namesFromReply.length > 0) {
+      console.log(`[song-verify] 📝 从 reply 提取到歌名:`, namesFromReply);
+      const extra = [];
+      for (const name of namesFromReply) {
+        try {
+          const match = await findSong(name);
+          if (match) {
+            extra.push({
+              id: match.id,
+              name: match.name,
+              artist: match.artist,
+              album: match.album || '',
+              coverUrl: match.coverUrl || '',
+            });
+            console.log(`[song-verify] ✅ 补全 ${name} → id=${match.id}`);
+          }
+        } catch {}
+      }
+      parsed.songs = extra;
+    }
   }
 
   // 存对话历史
