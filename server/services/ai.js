@@ -47,11 +47,23 @@ ${corpusSummary}
 规则：
 - reply 是必须的，songs 是可选的（只有推荐歌曲时才填）
 - **当你推荐歌曲时，必须同时将歌曲信息填入 songs 数组**，光在 reply 文字里提到歌名不够
+- **当用户要求「几首」「多首」「来几首」时，songs 数组必须包含 2-4 首歌，不能只给一首**
 - 每首歌给出 name、artist，如果有网易云 ID 也给上
 - 如果用户明确要求播放某首歌，必须把那首歌放进 songs 数组
 - 如果用户没要推荐歌，songs 填空数组 []
 - mood 始终给出一个
-- 不要假装"正在播放"某首歌，除非你确实把它放进 songs 数组里了`;
+- 不要假装"正在播放"某首歌，除非你确实把它放进 songs 数组里了
+
+## 示例（用户说「来几首适合写代码的」）
+{
+  "reply": "写代码需要点节奏感，这三首应该合适。",
+  "songs": [
+    { "name": "Computer Love", "artist": "Zapp", "id": "123456" },
+    { "name": "Digital Love", "artist": "Daft Punk", "id": "234567" },
+    { "name": "Tron Legacy (End Titles)", "artist": "Daft Punk", "id": "345678" }
+  ],
+  "mood": "focus"
+}`;
 
 export async function chat(userMessage, context = {}) {
   const db = await getDb();
@@ -94,7 +106,7 @@ export async function chat(userMessage, context = {}) {
       model: config.deepseek.model,
       messages,
       temperature: 0.8,
-      max_tokens: 1000,
+      max_tokens: 1500,
     }),
   });
 

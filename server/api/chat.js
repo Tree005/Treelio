@@ -36,31 +36,58 @@ router.post('/', async (req, res) => {
     let songs = [];
     if (result.songs && result.songs.length > 0) {
       for (const song of result.songs) {
+        // 先保留 AI 给出的信息，playable 标记是否可播放
+        const enriched = { ...song, playable: false };
         try {
-          let found = null;
           if (song.id) {
             try {
               const urlInfo = await getSongUrl(song.id);
-              found = { ...song, ...urlInfo };
+              enriched.url = urlInfo.url;
+              enriched.playable = true;
             } catch {
-              found = null;
+              // 无版权/ID 无效，尝试用歌名搜索
+              const found = await findSong(song.name, song.artist);
+              if (found) {
+                try {
+                  const urlInfo = await getSongUrl(found.id);
+                  enriched.id = found.id;
+                  enriched.name = found.name;
+                  enriched.artist = found.artist;
+                  enriched.coverUrl = found.coverUrl;
+                  enriched.url = urlInfo.url;
+                  enriched.playable = true;
+                } catch {
+                  // 搜索到了但无版权，保留搜索到的歌曲信息（无 URL）
+                  enriched.id = found.id;
+                  enriched.name = found.name;
+                  enriched.artist = found.artist;
+                  enriched.coverUrl = found.coverUrl;
+                }
+              }
             }
-          }
-          if (!found && song.name) {
-            found = await findSong(song.name, song.artist);
+          } else if (song.name) {
+            const found = await findSong(song.name, song.artist);
             if (found) {
               try {
                 const urlInfo = await getSongUrl(found.id);
-                found = { ...found, ...urlInfo };
+                enriched.id = found.id;
+                enriched.name = found.name;
+                enriched.artist = found.artist;
+                enriched.coverUrl = found.coverUrl;
+                enriched.url = urlInfo.url;
+                enriched.playable = true;
               } catch {
-                // VIP 或无版权，只返回搜索信息
+                enriched.id = found.id;
+                enriched.name = found.name;
+                enriched.artist = found.artist;
+                enriched.coverUrl = found.coverUrl;
               }
             }
           }
-          if (found) songs.push(found);
         } catch {
-          // 单首歌失败不影响整体
+          // 单首歌处理失败不影响整体，保留 AI 原始信息
         }
+        songs.push(enriched);
       }
     }
 
