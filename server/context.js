@@ -1,4 +1,4 @@
-// server/context.js — 6片 Prompt 组装模块
+// server/context.js — 8片 Prompt 组装模块
 // 输入：用户语料 + 天气 + 时间 + 历史记录 + 用户输入
 // 输出：结构化上下文 {say, play[], reason, segue}
 
@@ -7,6 +7,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import config from './config.js';
 import { getDb } from './db/index.js';
+import { getMultiDaySchedule } from './services/calendar.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -146,7 +147,7 @@ ${weather}
 ${vibe ? `\n氛围参考：${vibe}` : ''}`;
 }
 
-// ============ 5. 片 4: 品味片 ============
+// ============ 5. 片 4: 品味片 + 日程片（飞书日历）============
 
 /**
  * 生成品味片 prompt
@@ -154,6 +155,25 @@ ${vibe ? `\n氛围参考：${vibe}` : ''}`;
 function buildTasteFragment(corpusSummary) {
   return `## 用户歌单品味
 ${corpusSummary}`;
+}
+
+/**
+ * 生成日程片 prompt
+ * @param {string} scheduleText - 格式化后的日程文本
+ * @param {boolean} isConnected - 飞书日历是否已连接
+ */
+function buildScheduleFragment(scheduleText, isConnected = false) {
+  const statusLine = `- 飞书日历连接：${isConnected ? '已连接 ✅' : '未连接 ❌'}`;
+  let instruction = '';
+  if (!isConnected) {
+    instruction = '\n\n⚠️ 连接失败，不知道用户今天的日程。不要猜测原因，直接说读不到。';
+  } else if (scheduleText && scheduleText.includes('\n- ')) {
+    // 有实际事件
+    instruction = '\n\n结合日程，判断用户当前是否在学习/休息/繁忙，调整推荐氛围。若用户问起未来几天的安排，直接回答。';
+  } else {
+    instruction = '\n\n未来两天都没有日程安排，直接说没有安排就行，不要猜测原因。';
+  }
+  return `## 日程\n${statusLine}\n${scheduleText || '（未获取到日程）'}${instruction}`;
 }
 
 // ============ 6. 片 5: 历史片 ============
@@ -344,8 +364,14 @@ export async function buildContext(userMessage, options = {}) {
   // 获取歌单语料摘要
   const corpusSummary = getCorpusSummary();
 
-  // 获取当前播放状态
-  const playbackInfo = await getCurrentPlayback();
+  // 并行获取：播放状态 + 日程（今天+明天）
+  let calendarConnected = false;
+  const [playbackInfo, schedulePromise] = await Promise.all([
+    getCurrentPlayback(),
+    getMultiDaySchedule().then(r => ({ ok: true, text: r })).catch(() => ({ ok: false, text: '（获取日程失败）' })),
+  ]);
+  calendarConnected = schedulePromise.ok;
+  const scheduleText = schedulePromise.text;
   const playbackFragment = `## 当前播放状态\n${playbackInfo}\n\n如果你不知道当前在放什么，就说不知道，不要瞎编。`;
 
   // 获取对话历史
@@ -365,11 +391,12 @@ export async function buildContext(userMessage, options = {}) {
     isWeekend: [0, 6].includes(now.getDay()),
   };
 
-  // 组装 7 片 — 播放状态放在最后，靠近用户输入，让 AI 更容易关注当前实际状态
+  // 组装 8 片 — 播放状态放在最后，靠近用户输入，让 AI 更容易关注当前实际状态
   const fragments = [
     buildRoleFragment(tasteContent, moodRulesContent, routinesContent),
     buildTimeFragment(timeInfo),
     buildWeatherFragment(weather),
+    buildScheduleFragment(scheduleText, calendarConnected),  // 今日日程（飞书日历）
     buildTasteFragment(corpusSummary),
     buildHistoryFragment(history),
     playbackFragment,  // 放在 history 之后、format 之前，让 AI 以实际播放状态为最新基准

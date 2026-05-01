@@ -40,6 +40,12 @@ export default {
     musicU: env.MUSIC_U || '',
   },
 
+  // 飞书 (Lark)
+  lark: {
+    appId: env.LARK_APP_ID || '',
+    appSecret: env.LARK_APP_SECRET || '',
+  },
+
   // 和风天气
   qweather: {
     key: env.QWEATHER_API_KEY || '',

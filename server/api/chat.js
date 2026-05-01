@@ -8,6 +8,7 @@ import { findLocal } from '../services/song-index.js';
 import { getWeather } from '../services/weather.js';
 import { buildContext } from '../context.js';
 import { route, INTENT } from '../router.js';
+import { getFormattedSchedule } from '../services/calendar.js';
 
 const router = Router();
 
@@ -256,7 +257,16 @@ router.post('/', async (req, res) => {
       return       res.json({ say: cleanSay(result.say || `来几首 ${query || '适合现在的'} 音乐。`, verifiedSongs), play: verifiedSongs });
     }
 
-    // 6. 自然语言 — 完整 AI 对话
+    // 6. 日程查询 — 直接调用飞书日历返回，不走 AI
+    if (intent === INTENT.SCHEDULE) {
+      const dayLabel = params.label || { 0: '今天', 1: '明天', 2: '后天', 3: '大后天' }[params.days] || '那天';
+      let scheduleText = await getFormattedSchedule({ days: params.days });
+      // 非今天时替换"今日"为对应标签
+      if (params.days !== 0) scheduleText = scheduleText.replace('今日', dayLabel);
+      return res.json({ say: `${dayLabel}的安排：${scheduleText}`, play: [] });
+    }
+
+    // 7. 自然语言 — 完整 AI 对话
     const ctx = await buildContext(message, { weather });
     const result = await aiChat(ctx.systemPrompt, ctx.history, message);
 

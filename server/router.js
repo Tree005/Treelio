@@ -7,7 +7,10 @@
 //   3. PLAY_NOW — 指定歌曲（"播放xxx/来首xxx/想听xxx" → 搜歌）
 //   4. PLAYLIST — 其他推荐表达（"推荐xxx/有没有xxx"）
 //   5. QUEUE
-//   6. CHAT（兜底）
+//   6. SCHEDULE — 日程查询
+//   7. CHAT（兜底）
+
+import { extractDateFromPrefix } from './services/date-parser.js';
 
 /**
  * 意图类型枚举
@@ -20,6 +23,7 @@ export const INTENT = {
   STOP: 'stop',             // "停止" / "暂停" — 停止播放
   NEXT: 'next',             // "下一首" — 切到下一首
   REPLAY: 'replay',         // "重播" / "再放一遍" — 重播当前
+  SCHEDULE: 'schedule',     // "明天有什么安排" — 查飞书日程
 };
 
 /**
@@ -190,7 +194,47 @@ export function route(message) {
     return { intent: INTENT.QUEUE, params: {} };
   }
 
-  // ========== 6. 自然语言（兜底）==========
+  // ========== 6. 日程查询 ==========
+  // 路径A: 快速正则（今天/明天/后天/大后天）
+
+  const scheduleMatch = text.match(/^(今天|明天|后天|大后天)\s*(?:有什么|啥|的)?\s*(?:安排|行程|日程|计划)?\s*[?？]?$/i);
+  if (scheduleMatch) {
+    const dayMap = { '今天': 0, '明天': 1, '后天': 2, '大后天': 3 };
+    return {
+      intent: INTENT.SCHEDULE,
+      params: { days: dayMap[scheduleMatch[1]] ?? 0 },
+    };
+  }
+
+  // 路径B: 解析器识别（这周三/下周四/5月5号/这个月15号/下个月4号...）
+  const extracted = extractDateFromPrefix(text);
+  if (extracted) {
+    const rest = text.slice(extracted.matchLength).trim();
+    // 剩余部分为空，或是日程查询关键词
+    if (!rest || /^(?:有什么|啥|的)?\s*(?:安排|行程|日程|计划|事情|事)?\s*[?？]?$/i.test(rest)) {
+      return {
+        intent: INTENT.SCHEDULE,
+        params: { days: extracted.days, label: extracted.label },
+      };
+    }
+  }
+
+  // 路径C: 带前缀的日程查询（帮我查一下/查查/看看 这周三...）
+  const prefixMatch = text.match(/^(?:查(?:一下|查)?|看(?:一下|看)?|帮我查(?:一下)?)\s*(.+)$/i);
+  if (prefixMatch) {
+    const inner = extractDateFromPrefix(prefixMatch[1]);
+    if (inner) {
+      const rest = prefixMatch[1].slice(inner.matchLength).trim();
+      if (!rest || /^(?:有什么|啥|的)?\s*(?:安排|行程|日程|计划|事情|事)?\s*[?？]?$/i.test(rest)) {
+        return {
+          intent: INTENT.SCHEDULE,
+          params: { days: inner.days, label: inner.label },
+        };
+      }
+    }
+  }
+
+  // ========== 7. 自然语言（兜底）==========
 
   return { intent: INTENT.CHAT, params: {} };
 }
