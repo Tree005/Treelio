@@ -10,7 +10,7 @@ import Profile from './components/Profile';
 
 export default function App() {
   const [showProfile, setShowProfile] = useState(false);
-  const { theme, toggle } = useTheme();
+  const { theme, switchTheme } = useTheme();
   const player = usePlayer();
   const { messages, loading, sendMessage } = useChat(player.play, player.enqueueAndPlay);
 
@@ -36,9 +36,17 @@ export default function App() {
         </div>
         <div className="top-bar__actions">
           <button className="top-bar__login">LOGIN</button>
-          <button className="theme-toggle" onClick={toggle}>
-            {theme === 'dark' ? 'LIGHT' : 'DARK'}
-          </button>
+          <div className="theme-pills">
+            {['daily', 'dark', 'light'].map(t => (
+              <button
+                key={t}
+                className={`theme-pill${theme === t ? ' theme-pill--active' : ''}`}
+                onClick={() => switchTheme(t)}
+              >
+                {t.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -78,7 +86,7 @@ export default function App() {
           <div className="profile-overlay" onClick={() => setShowProfile(false)} />
           <Profile
             theme={theme}
-            onToggleTheme={toggle}
+            onToggleTheme={() => switchTheme(theme === 'dark' ? 'daily' : 'dark')}
             onClose={() => setShowProfile(false)}
             player={player}
           />

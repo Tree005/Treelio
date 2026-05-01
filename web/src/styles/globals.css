@@ -1,53 +1,88 @@
-/* styles/globals.css — Treelio 设计系统 (refined) */
+/* styles/globals.css — Treelio 设计系统 */
 
-/* ====== 主题变量（绿色系）====== */
+/* ====== Daily 主题（默认，暖橙）====== */
 :root,
-[data-theme='dark'] {
-  --bg: #0a0a0a;
-  --bg-elevated: #111111;
-  --surface: #161616;
-  --surface-hover: #1e1e1e;
-  --text: #e0e0e0;
-  --text-secondary: #888888;
-  --text-dim: #4a4a4a;
-  --accent: #00d4aa;
-  --accent-dim: rgba(0, 212, 170, 0.12);
-  --red: #ff4757;
-  --green: #22c55e;
-  --border: #1f1f1f;
-  --border-light: #2a2a2a;
-  --input-bg: #111111;
-  --shadow: rgba(0, 0, 0, 0.4);
-  --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.5);
-  --msg-claudio: #131313;
-  --msg-user: #1c1810;
-  --scrollbar-track: #0a0a0a;
-  --scrollbar-thumb: #2a2a2a;
-  --grid-color: rgba(0, 212, 170, 0.15);
-}
-
-[data-theme='light'] {
-  --bg: #faf8f2;
-  --bg-elevated: #f0ece0;
-  --surface: #ffffff;
-  --surface-hover: #f7f4ea;
-  --text: #1a1a1a;
-  --text-secondary: #666666;
-  --text-dim: #aaaaaa;
-  --accent: #00b894;
-  --accent-dim: rgba(0, 184, 148, 0.1);
-  --red: #ff4757;
-  --green: #16a34a;
-  --border: #e2ddd0;
-  --border-light: #ede8da;
-  --input-bg: #ffffff;
+[data-theme='daily'] {
+  --bg: #F9F6F0;
+  --bg-elevated: #F4F0E8;
+  --surface: #FFFFFF;
+  --surface-hover: #F4F0E8;
+  --input-bg: #F4F0E8;
+  --text: #1F1B14;
+  --text-secondary: #5F5543;
+  --text-dim: #8C806B;
+  --accent: #C8782C;
+  --accent-hover: #B06820;
+  --accent-dim: rgba(200, 120, 44, 0.12);
+  --red: #D64040;
+  --green: #3A8A3A;
+  --border: #E5DED3;
+  --border-light: #EDE7DC;
   --shadow: rgba(0, 0, 0, 0.06);
   --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.08);
-  --msg-claudio: #ffffff;
-  --msg-user: #f5f0e0;
-  --scrollbar-track: #f0ece0;
-  --scrollbar-thumb: #ccc5b5;
-  --grid-color: rgba(0, 184, 148, 0.12);
+  --msg-claudio: #FFFFFF;
+  --msg-user: #F4F0E8;
+  --scrollbar-track: #F4F0E8;
+  --scrollbar-thumb: #D6C9B8;
+  --progress-bg: #EDE7DC;
+  --progress-fill: #C8782C;
+  --grid-color: rgba(200, 120, 44, 0.15);
+}
+
+/* ====== Dark 主题（亮蓝）====== */
+[data-theme='dark'] {
+  --bg: #0C0C11;
+  --bg-elevated: #18181F;
+  --surface: #18181F;
+  --surface-hover: #1E1E27;
+  --input-bg: #22222D;
+  --text: #F0F0F5;
+  --text-secondary: #A8A8B8;
+  --text-dim: #6E6E80;
+  --accent: #5B7FFF;
+  --accent-hover: #4A6AEE;
+  --accent-dim: rgba(91, 127, 255, 0.12);
+  --red: #FF4757;
+  --green: #34C759;
+  --border: #2A2A36;
+  --border-light: #30303D;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.5);
+  --msg-claudio: #18181F;
+  --msg-user: #1E1E27;
+  --scrollbar-track: #0C0C11;
+  --scrollbar-thumb: #2A2A36;
+  --progress-bg: #2A2A36;
+  --progress-fill: #5B7FFF;
+  --grid-color: rgba(91, 127, 255, 0.12);
+}
+
+/* ====== Light 主题（现代蓝）====== */
+[data-theme='light'] {
+  --bg: #F5F5F9;
+  --bg-elevated: #EFEFF5;
+  --surface: #FFFFFF;
+  --surface-hover: #F3F3F8;
+  --input-bg: #F3F3F8;
+  --text: #13131A;
+  --text-secondary: #555566;
+  --text-dim: #8A8A9A;
+  --accent: #3B5DE7;
+  --accent-hover: #2D49C0;
+  --accent-dim: rgba(59, 93, 231, 0.1);
+  --red: #E53935;
+  --green: #34C759;
+  --border: #E8E8EF;
+  --border-light: #EFEFF5;
+  --shadow: rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --msg-claudio: #FFFFFF;
+  --msg-user: #F3F3F8;
+  --scrollbar-track: #EFEFF5;
+  --scrollbar-thumb: #CCCCD8;
+  --progress-bg: #EAEAEF;
+  --progress-fill: #3B5DE7;
+  --grid-color: rgba(59, 93, 231, 0.10);
 }
 
 /* ====== 全局重置 ====== */
@@ -94,7 +129,7 @@ body {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.4) 1px, transparent 1px);
+    radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
   background-size: 20px 20px;
   background-position: center center;
   pointer-events: none;
@@ -207,26 +242,46 @@ body {
   background: var(--accent-dim);
 }
 
-/* ====== 主题切换按钮 ====== */
-.theme-toggle {
-  background: transparent;
-  border: 1px solid var(--border-light);
+/* ====== 主题切换 pill 组 ====== */
+.theme-pills {
+  display: flex;
+  border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 4px 14px;
-  color: var(--text-secondary);
+  overflow: hidden;
+}
+
+.theme-pill {
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  padding: 4px 10px;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
-  text-transform: uppercase;
   font-family: 'Inter', sans-serif;
 }
 
-.theme-toggle:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
+.theme-pill:last-child {
+  border-right: none;
+}
+
+.theme-pill:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.theme-pill--active {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+[data-theme='daily'] .theme-pill--active,
+[data-theme='light'] .theme-pill--active {
+  color: #ffffff;
 }
 
 /* ====== 时钟区域 ====== */
@@ -343,13 +398,14 @@ body {
   50% { transform: scaleY(1); }
 }
 
-/* 歌曲信息 */
+/* 歌曲信息（主行，撑满控制按钮让出的空间） */
 .player__song-info {
-  flex: 0 0 80px;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .player__song-name {
@@ -525,12 +581,31 @@ body {
   transition: background 0.2s;
 }
 
-/* 底部进度行 */
+/* 底部进度行：时间 + 控制按钮 + 进度条 */
 .player__progress-row {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-top: 6px;
+  min-width: 0;
+}
+
+/* 进度行：时间 */
+.player__progress-row .player__time {
+  flex-shrink: 0;
+  min-width: 28px;
+}
+
+/* 进度行：控制按钮（固定宽度） */
+.player__progress-row .player__controls {
+  flex-shrink: 0;
+  width: 116px;
+}
+
+/* 进度行：进度条 */
+.player__progress-row .player__progress-bar {
+  flex: 1;
+  min-width: 0;
 }
 
 .player__time {

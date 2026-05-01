@@ -55,7 +55,7 @@ export default function Player({
 
   return (
     <>
-      {/* 主行：频谱 + 歌曲信息 + 控制按钮 + 标签 + 音量 */}
+      {/* 主行：频谱 + 歌曲信息 + 标签 */}
       <div className="player__main-row">
         {/* 左侧：频谱 */}
         <div className={`player__wave ${playing ? '' : 'player__wave--idle'}`}>
@@ -77,7 +77,18 @@ export default function Player({
           </div>
         </div>
 
-        {/* 控制按钮组 */}
+        {/* 标签组：HIDE + FAV */}
+        <div className="player__tags">
+          <button className="player__btn player__btn--text" title="隐藏播放器">HIDE</button>
+          <span className={`player__tag ${liked ? 'player__tag--active' : ''}`}>FAV</span>
+        </div>
+      </div>
+
+      {/* 底部行：时间 + 控制按钮 + 进度条 */}
+      <div className="player__progress-row">
+        <span className="player__time">{formatTime(currentTime)}</span>
+
+        {/* 控制按钮组：上一首 / 播放 / 下一首 / 停止 / 爱心 */}
         <div className="player__controls">
           <button className="player__btn player__btn--circle" onClick={playPrevious} title="上一首" disabled={queueLen === 0}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
@@ -114,21 +125,13 @@ export default function Player({
               <path d="M8 14s-6-4-6-8.5C2 3 3.8 1.5 5.5 1.5c1.1 0 2 .6 2.5 1.3.5-.7 1.4-1.3 2.5-1.3C12.2 1.5 14 3 14 5.5 14 10 8 14 8 14z"/>
             </svg>
           </button>
-          <button className="player__btn player__btn--text" title="隐藏播放器">HIDE</button>
         </div>
 
-        {/* 标签组 */}
-        <div className="player__tags">
-          <span className={`player__tag ${liked ? 'player__tag--active' : ''}`}>FAV</span>
-        </div>
-      </div>
-
-      {/* 底部行：时间 + 进度条 */}
-      <div className="player__progress-row">
-        <span className="player__time">{formatTime(currentTime)}</span>
+        {/* 进度条 */}
         <div className="player__progress-bar" onClick={handleProgressClick}>
           <div className="player__progress-fill" style={{ width: `${progress}%` }} />
         </div>
+
         <span className="player__time">{formatTime(duration)}</span>
       </div>
 

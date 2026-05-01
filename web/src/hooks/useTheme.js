@@ -1,10 +1,10 @@
-// src/hooks/useTheme.js — 主题切换
+// src/hooks/useTheme.js — 主题切换（三值：daily / dark / light）
 import { useState, useEffect, useCallback } from 'react';
 
 export function useTheme() {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('treelio-theme');
-    return saved || 'dark';
+    return saved || 'daily';
   });
 
   useEffect(() => {
@@ -12,9 +12,7 @@ export function useTheme() {
     localStorage.setItem('treelio-theme', theme);
   }, [theme]);
 
-  const toggle = useCallback(() => {
-    setTheme(t => t === 'dark' ? 'light' : 'dark');
-  }, []);
+  const switchTheme = useCallback((t) => setTheme(t), []);
 
-  return { theme, toggle };
+  return { theme, switchTheme };
 }
