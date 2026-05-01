@@ -114,20 +114,12 @@ export default function Player({
               <path d="M8 14s-6-4-6-8.5C2 3 3.8 1.5 5.5 1.5c1.1 0 2 .6 2.5 1.3.5-.7 1.4-1.3 2.5-1.3C12.2 1.5 14 3 14 5.5 14 10 8 14 8 14z"/>
             </svg>
           </button>
+          <button className="player__btn player__btn--text" title="隐藏播放器">HIDE</button>
         </div>
 
         {/* 标签组 */}
         <div className="player__tags">
           <span className={`player__tag ${liked ? 'player__tag--active' : ''}`}>FAV</span>
-          <span className="player__tag">VOL</span>
-        </div>
-
-        {/* 音量滑块 */}
-        <div className="player__vol-slider" onClick={handleVolClick}>
-          <div className="player__vol-track">
-            <div className="player__vol-fill" style={{ width: `${vol}%` }} />
-            <div className="player__vol-thumb" style={{ left: `${vol}%` }} />
-          </div>
         </div>
       </div>
 

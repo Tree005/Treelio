@@ -297,7 +297,7 @@ body {
 .player {
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  padding: 10px 16px 8px;
+  padding: 8px 16px 6px;
   flex-shrink: 0;
 }
 
@@ -305,7 +305,8 @@ body {
 .player__main-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 /* 频谱动画 */
@@ -344,8 +345,7 @@ body {
 
 /* 歌曲信息 */
 .player__song-info {
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 80px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -359,13 +359,15 @@ body {
   letter-spacing: 0.04em;
   line-height: 1;
   overflow: hidden;
-  position: relative;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   height: 18px;
 }
 
 .player__song-name-inner {
   display: inline-block;
   white-space: nowrap;
+  max-width: 100%;
   animation: none;
 }
 
@@ -437,6 +439,22 @@ body {
 .player__btn--active {
   color: var(--red);
   border-color: var(--red);
+}
+
+.player__btn--text {
+  font-family: 'VT323', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.player__btn--text:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-light);
 }
 
 /* 标签组 */
@@ -512,7 +530,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .player__time {
@@ -556,9 +574,10 @@ body {
   letter-spacing: 0.15em;
   color: var(--accent);
   text-transform: uppercase;
-  padding: 4px 0 8px;
+  padding: 4px 0 2px;
   text-align: center;
   opacity: 0.8;
+  flex-shrink: 0;
 }
 
 /* ====== 聊天区域 ====== */
