@@ -46,12 +46,15 @@ export function route(message) {
 // ========== 播放类指令 ==========
 
 // "我想听xxx" / "想听xxx" / "我要听xxx" / "听听xxx" — 直接播放指定歌曲
+// 注意：排除"想听几首"、"想听点"等量词表达（应走 PLAYLIST）
 const wantPlayMatch = text.match(/^(?:我?想听|我要听|听听)\s*(.+)/i);
 if (wantPlayMatch) {
-  return {
-    intent: INTENT.PLAY_NOW,
-    params: { query: wantPlayMatch[1].trim() },
-  };
+  const q = wantPlayMatch[1].trim();
+  if (/^(?:[几两三四五六七八九十\d]+首|点)/.test(q)) {
+    // "想听几首xxx" → PLAYLIST（降级，让 AI 推荐多首）
+    return { intent: INTENT.PLAYLIST, params: { query: q.replace(/^(?:[几两三四五六七八九十\d]+首|点)\s*/i, '') } };
+  }
+  return { intent: INTENT.PLAY_NOW, params: { query: q } };
 }
 
 // "播放xxx" / "播一下xxx" / "来(首|一首)xxx" / "放(首|一首)xxx" — 直接播放指定歌曲
@@ -64,10 +67,12 @@ if (playNowMatch) {
   };
 }
 
-// "来(几|两|三|几首|点)xxx" / "推荐xxx" / "给我来xxx" / "再来几首xxx" / "能放几首xxx" — 推荐多首
-let playlistMatch = text.match(/^(?:再?(?:来(?:[几两三四五六七八九十\d]+首)?|点)|给我来(?:[几两三四五六七八九十\d]+首)?|推荐)(?:\s+(.+))?$/i) ||
-                    text.match(/^(?:能|我想|可以)?(?:放|播|来)(?:[几两三四五六七八九十\d]+首|点)\s*(.+)?$/i) ||
-                    text.match(/^(?:有没有|有什么)推荐的(?:歌|音乐)?(?:[，,?\s]+(.+))?$/i);
+// "来(几|两|三|几首|点)xxx" / "推荐xxx" / "给我来xxx" / "再来几首xxx" / "能放几首xxx"
+// "多来几首xxx" / "再多来几首xxx" / "多放几首xxx" / "想听几首xxx" / "推荐几首xxx" — 推荐多首
+let playlistMatch = text.match(/^(?:再?(?:来(?:[几两三四五六七八九十\d]+首)?|点)|给我来(?:[几两三四五六七八九十\d]+首)?|推荐(?:[几两三四五六七八九十\d]+首|点)?)\s*(.+)?$/i) ||
+                    text.match(/^(?:多?再?多?|能|我想|可以|想|要多)?(?:来|放|播)(?:[几两三四五六七八九十\d]+首|点)\s*(.+)?$/i) ||
+                    text.match(/^(?:有没有|有什么)推荐的(?:歌|音乐)?(?:[，,?\s]+(.+))?$/i) ||
+                    text.match(/^(?:多来|多放|多播|再多来|再多放|再多播|想听)(?:[几两三四五六七八九十\d]+首|点)\s*(.+)?$/i);
   if (playlistMatch) {
     return {
       intent: INTENT.PLAYLIST,
