@@ -1,5 +1,5 @@
 // src/App.jsx — 根组件
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from './hooks/useTheme';
 import { usePlayer } from './hooks/usePlayer';
 import { useChat } from './hooks/useChat';
@@ -9,10 +9,20 @@ import Chat from './components/Chat';
 import Profile from './components/Profile';
 
 export default function App() {
-  const [showProfile, setShowProfile] = useState(false); // 弹出层控制
+  const [showProfile, setShowProfile] = useState(false);
   const { theme, toggle } = useTheme();
   const player = usePlayer();
   const { messages, loading, sendMessage } = useChat(player.play, player.enqueueAndPlay);
+
+  // 播放时给 body 加 playing 类，触发点阵呼吸动画
+  useEffect(() => {
+    if (player.playing) {
+      document.body.classList.add('playing');
+    } else {
+      document.body.classList.remove('playing');
+    }
+    return () => document.body.classList.remove('playing');
+  }, [player.playing]);
 
   return (
     <div className="app">

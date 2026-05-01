@@ -23,7 +23,7 @@
   --msg-user: #1c1810;
   --scrollbar-track: #0a0a0a;
   --scrollbar-thumb: #2a2a2a;
-  --grid-color: rgba(0, 212, 170, 0.06);
+  --grid-color: rgba(0, 212, 170, 0.15);
 }
 
 [data-theme='light'] {
@@ -47,7 +47,7 @@
   --msg-user: #f5f0e0;
   --scrollbar-track: #f0ece0;
   --scrollbar-thumb: #ccc5b5;
-  --grid-color: rgba(0, 184, 148, 0.05);
+  --grid-color: rgba(0, 184, 148, 0.12);
 }
 
 /* ====== 全局重置 ====== */
@@ -72,6 +72,32 @@ body {
   min-height: 100vh;
   line-height: 1.5;
   transition: background 0.4s ease, color 0.4s ease;
+  position: relative;
+}
+
+/* 全屏白色点阵背景 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.18) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+  background-position: center center;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.6s ease;
+  opacity: 0.6;
+}
+
+/* 播放时的呼吸动画 */
+body.playing::before {
+  animation: grid-breathe 3s ease-in-out infinite;
+}
+
+@keyframes grid-breathe {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 /* 自定义滚动条 */
@@ -97,12 +123,9 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: var(--bg);
+  background: transparent;
   overflow: hidden;
-  background-image:
-    radial-gradient(circle, var(--grid-color) 2px, transparent 2px);
-  background-size: 24px 24px;
-  background-position: center center;
+  z-index: 1;
 }
 
 /* ====== 主内容卡片容器 ====== */
@@ -206,10 +229,6 @@ body {
   padding: 32px 20px 24px;
   flex-shrink: 0;
   position: relative;
-  background-image:
-    radial-gradient(circle, var(--grid-color) 2px, transparent 2px);
-  background-size: 24px 24px;
-  background-position: center center;
 }
 
 .clock-time {
