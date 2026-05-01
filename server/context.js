@@ -32,22 +32,25 @@ function readCorpusFile(filename) {
 }
 
 /**
- * 读取歌单语料摘要
+ * 读取歌单语料摘要（从 music-profile/all-songs.json 生成）
  */
 function getCorpusSummary() {
-  const corpusPath = resolve(config.dataDir, 'user-corpus.json');
+  const allSongsPath = resolve(config.dataDir, 'music-profile', 'all-songs.json');
+  const reportPath = resolve(config.dataDir, 'music-profile', 'report.md');
   try {
-    if (!existsSync(corpusPath)) {
-      return '（暂无歌单数据）';
+    if (!existsSync(allSongsPath)) return '（暂无歌单数据）';
+    const songs = JSON.parse(readFileSync(allSongsPath, 'utf-8'));
+    const total = songs.length;
+    // 取前 20 首代表作
+    const sample = songs.slice(0, 20).map(s => `${s.name} - ${s.artist}`).join('\n');
+    // 尝试读 report 里的 Top 艺术家
+    let artistHint = '';
+    if (existsSync(reportPath)) {
+      const report = readFileSync(reportPath, 'utf-8');
+      const match = report.match(/## 最常听的艺术家[\s\S]*?(?=\n##)/);
+      if (match) artistHint = '\n' + match[0];
     }
-    const corpus = JSON.parse(readFileSync(corpusPath, 'utf-8'));
-    const songs = corpus.platforms?.netease?.songs || [];
-    if (songs.length === 0) {
-      return '（暂无歌单数据）';
-    }
-    // 提取前 30 首作为品味参考
-    const sample = songs.slice(0, 30).map(s => `${s.name} - ${s.artist}`).join('\n');
-    return `用户歌单共 ${corpus.stats?.totalSongs || songs.length} 首，部分代表作：\n${sample}`;
+    return `用户歌单共 ${total} 首，绝大部分为纯音乐/钢琴/新古典。\n部分代表作：\n${sample}${artistHint}`;
   } catch (e) {
     console.warn('[context] 读取歌单语料失败:', e.message);
     return '（暂无歌单数据）';
