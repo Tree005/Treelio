@@ -210,20 +210,15 @@ export async function chat(systemPrompt, history, userMessage, options = {}) {
   sayText = sayText.replace(/^\s*[,\]]+/, '').trim();
   if (!sayText) sayText = '（回复解析失败）';
 
-  // 兼容旧字段（如果有的话）
-  const reasonText = parsed?.reason || parsed?.mood || '';
   const result = {
     say: sayText,
     play: parsed ? normalizeSongs(parsed.play || parsed.songs || []) : [],
-    reason: reasonText,
-    segue: parsed?.segue || '',
   };
 
   // 诊断日志
   console.log('[ai-parsed]', JSON.stringify({
     say: result.say?.substring(0, 80),
     playCount: result.play.length,
-    preambleLen: preambleText.length,
   }));
 
   // 存储对话历史

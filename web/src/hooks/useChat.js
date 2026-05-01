@@ -52,15 +52,12 @@ export function useChat(onPlaySong, onEnqueueSongs) {
     try {
       const result = await api.chat(text.trim());
 
-      // 适配新的返回格式 {say, play[], reason, segue}
+      // 适配新的返回格式 {say, play[]}
       const claudioMsg = {
         id: Date.now() + 1,
         role: 'claudio',
         content: result.say || result.reply || '',  // 兼容旧格式
         songs: result.play || result.songs || [],   // 兼容旧格式
-        reason: result.reason || '',
-        segue: result.segue || '',
-        mood: result.mood || 'neutral',
         time: new Date(),
       };
 

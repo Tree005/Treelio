@@ -127,6 +127,35 @@ function cleanPlayQuery(query) {
     .trim();
 }
 
+/**
+ * 同步 say 和 play：移除 say 中提到了但实际没被验证通过的歌名引用
+ * AI 常会写"念欢里这首《嗜好》..."但《嗜好》可能没版权被过滤了
+ */
+function cleanSay(say, verifiedSongs) {
+  if (!say || verifiedSongs.length === 0) return say;
+
+  const verifiedNames = new Set(verifiedSongs.map(s => s.name?.trim()));
+  const verifiedArtists = new Set(verifiedSongs.map(s => s.artist?.split('/')[0]?.trim()));
+
+  // 移除 say 中《歌名》但歌名不在 verified 里的引用
+  // 比如 "这首《晚安》" → "这首歌"
+  let cleaned = say.replace(/《(.+?)》/g, (match, name) => {
+    if (verifiedNames.has(name.trim()) || verifiedNames.has(name.replace(/['']/g, '').trim())) {
+      return match; // 保留
+    }
+    return '这首歌';
+  });
+
+  // 如果清理后 say 变得很奇怪，回退到更简洁的版本
+  const songMentionsInPlay = verifiedSongs.map(s => s.name).join('、');
+  if (cleaned.length < say.length * 0.5) {
+    // 被大量替换，say 已经破碎了 → 重建
+    return `来几首${verifiedSongs.map(s => `${s.name} - ${s.artist}`).join('、')}。`;
+  }
+
+  return cleaned;
+}
+
 // POST /api/chat
 router.post('/', async (req, res) => {
   try {
@@ -146,32 +175,17 @@ router.post('/', async (req, res) => {
 
     // 1. 停止指令
     if (intent === INTENT.STOP) {
-      return res.json({
-        say: '好的，停止播放。',
-        play: [],
-        reason: '',
-        segue: '',
-      });
+      return res.json({ say: '好的，停止播放。', play: [] });
     }
 
     // 2. 下一首指令
     if (intent === INTENT.NEXT) {
-      return res.json({
-        say: '好的，下一首。',
-        play: [],
-        reason: '',
-        segue: 'NEXT',
-      });
+      return res.json({ say: '好的，下一首。', play: [] });
     }
 
     // 3. 重播指令
     if (intent === INTENT.REPLAY) {
-      return res.json({
-        say: '好的，再来一遍。',
-        play: [],
-        reason: '',
-        segue: 'REPLAY',
-      });
+      return res.json({ say: '好的，再来一遍。', play: [] });
     }
 
     // 4. 直接播放指令 — 快速路径
@@ -181,19 +195,9 @@ router.post('/', async (req, res) => {
       const match = await findSong(cleanQuery);
       if (match) {
         const verified = await verifySong({ ...match, name: params.query });
-        return res.json({
-          say: `播放 ${verified.name}，${verified.artist}`,
-          play: [verified],
-          reason: '用户直接点播',
-          segue: '',
-        });
+        return res.json({ say: `播放 ${verified.name}，${verified.artist}`, play: [verified] });
       }
-      return res.json({
-        say: `没找到 "${params.query}" 这首歌，换一首试试？`,
-        play: [],
-        reason: '',
-        segue: '',
-      });
+      return res.json({ say: `没找到 "${params.query}" 这首歌，换一首试试？`, play: [] });
     }
 
     // 5. 推荐播放指令 — 走 AI，但加场景限定
@@ -249,12 +253,7 @@ router.post('/', async (req, res) => {
         }
       }
 
-      return res.json({
-        say: result.say || `来几首 ${query || '适合现在的'} 音乐。`,
-        play: verifiedSongs,
-        reason: result.reason || '',
-        segue: result.segue || '',
-      });
+      return       res.json({ say: cleanSay(result.say || `来几首 ${query || '适合现在的'} 音乐。`, verifiedSongs), play: verifiedSongs });
     }
 
     // 6. 自然语言 — 完整 AI 对话
@@ -301,12 +300,7 @@ router.post('/', async (req, res) => {
       }
     }
 
-    res.json({
-      say: result.say,
-      play: verifiedSongs,
-      reason: result.reason || '',
-      segue: result.segue || '',
-    });
+    res.json({ say: cleanSay(result.say, verifiedSongs), play: verifiedSongs });
   } catch (err) {
     console.error('Chat API 错误:', err);
     res.status(500).json({ error: '服务内部错误' });
