@@ -17,7 +17,7 @@ import { getDb, saveDb } from '../db/index.js';
 export async function chat(systemPrompt, history, userMessage, options = {}) {
   const {
     stream = false,
-    temperature = 0.45,
+    temperature = 0.2,
     model = config.deepseek.model,
   } = options;
 
