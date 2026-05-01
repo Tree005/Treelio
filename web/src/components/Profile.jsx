@@ -2,14 +2,14 @@
 import { useState, useEffect } from 'react';
 
 const TASTE_TAGS = [
-  'JAZZ-HIPHOP',
+  'PIANO',
   'NEO-CLASSICAL',
-  'LO-FI',
-  'CHILLWAVE',
-  'POST-ROCK',
-  'SYNTHWAVE',
   'AMBIENT',
-  'DOWNTEMPO',
+  'LO-FI',
+  'FOCUS',
+  'MINIMALISM',
+  'SCORE',
+  'CHILLOUT',
 ];
 
 const MOOD_TAGS = [
