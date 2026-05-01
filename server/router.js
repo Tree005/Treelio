@@ -43,19 +43,28 @@ export function route(message) {
     return { intent: INTENT.REPLAY, params: {} };
   }
 
-  // ========== 播放类指令 ==========
+// ========== 播放类指令 ==========
 
-  // "播放xxx" — 直接播放
-  const playNowMatch = text.match(/^(?:播放|播|放|播一下|放一下)\s*(.+)/i);
-  if (playNowMatch) {
-    return {
-      intent: INTENT.PLAY_NOW,
-      params: { query: playNowMatch[1].trim() },
-    };
-  }
+// "我想听xxx" / "想听xxx" / "我要听xxx" / "听听xxx" — 直接播放指定歌曲
+const wantPlayMatch = text.match(/^(?:我?想听|我要听|听听)\s*(.+)/i);
+if (wantPlayMatch) {
+  return {
+    intent: INTENT.PLAY_NOW,
+    params: { query: wantPlayMatch[1].trim() },
+  };
+}
 
-  // "来几首xxx" / "推荐xxx" — 推荐播放
-  const playlistMatch = text.match(/^(?:来(?:几首|点)?|推荐|给我来|放(?:几首|点)?|播(?:几首|点)?)\s*(.+)?/i);
+// "播放xxx" / "播一下xxx" / "来(首|一首)xxx" / "放(首|一首)xxx" — 直接播放指定歌曲
+const playNowMatch = text.match(/^(?:再?(?:播放|播|放|播一下|放一下)|来(?:再?)?(?:首|一首)|放(?:再?)?(?:首|一首))\s*(.+)/i);
+if (playNowMatch) {
+  return {
+    intent: INTENT.PLAY_NOW,
+    params: { query: playNowMatch[1].trim() },
+  };
+}
+
+// "来(几|两|三|几首|点)xxx" / "推荐xxx" / "给我来xxx" / "再来几首xxx" — 推荐多首
+const playlistMatch = text.match(/^(?:再?(?:来(?:[几两三四五六七八九十\d]+首)?|点)|给我来(?:[几两三四五六七八九十\d]+首)?|推荐|(?:放|播)(?:[几两三四五六七八九十\d]+首|点))\s*(.+)?/i);
   if (playlistMatch) {
     return {
       intent: INTENT.PLAYLIST,

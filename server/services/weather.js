@@ -3,8 +3,13 @@ import fetch from 'node-fetch';
 import config from '../config.js';
 
 export async function getWeather(location = '101010100') {
-  // 默认北京，location 为和风城市 ID
-  const url = `https://devapi.qweather.com/v7/weather/now?location=${location}&key=${config.qweather.key}`;
+  const key = config.qweather.key;
+  const publicId = config.qweather.id; // 商业用户项目ID
+  // 商业用户需同时传 publicid + key，免费用户只传 key
+  const params = publicId
+    ? `location=${location}&publicid=${publicId}&key=${key}`
+    : `location=${location}&key=${key}`;
+  const url = `https://devapi.qweather.com/v7/weather/now?${params}`;
   try {
     const res = await fetch(url);
     if (!res.ok) return null;

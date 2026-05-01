@@ -550,6 +550,7 @@ body {
 
 /* ====== 第三行：控制按钮 + QUEUE ====== */
 .player__row--controls {
+  position: relative;
   justify-content: space-between;
   gap: 8px;
 }

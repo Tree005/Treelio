@@ -1,17 +1,19 @@
-// src/hooks/usePlayer.js — 播放器状态管理 + 队列
+// src/hooks/usePlayer.js — 播放器状态管理 + 队列（单例 + 多 listener 广播）
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { api } from '../utils/api';
 
 const LIKED_KEY = 'treelio-liked-songs';
 const QUEUE_KEY = 'treelio-play-queue';
 
+// ========================
+// 模块级单例（所有 usePlayer 调用共享）
+// ========================
+
 function loadLikedSongs() {
   try {
     const raw = localStorage.getItem(LIKED_KEY);
     return raw ? new Set(JSON.parse(raw)) : new Set();
-  } catch {
-    return new Set();
-  }
+  } catch { return new Set(); }
 }
 
 function saveLikedSongs(set) {
@@ -24,17 +26,11 @@ function loadQueue() {
     if (!raw) return { queue: [], index: -1 };
     const data = JSON.parse(raw);
     return { queue: Array.isArray(data.queue) ? data.queue : [], index: data.index ?? -1 };
-  } catch {
-    return { queue: [], index: -1 };
-  }
+  } catch { return { queue: [], index: -1 }; }
 }
 
 function saveQueueData(queue, index) {
-  try {
-    localStorage.setItem(QUEUE_KEY, JSON.stringify({ queue, index }));
-  } catch {
-    // localStorage 满了，忽略
-  }
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify({ queue, index })); } catch {}
 }
 
 function formatTime(ms) {
@@ -45,377 +41,329 @@ function formatTime(ms) {
   return `${min}:${sec.toString().padStart(2, '0')}`;
 }
 
-export function usePlayer() {
-  const audioRef = useRef(null);
-  const currentSongRef = useRef(null);
-  const [currentSong, setCurrentSong] = useState(() => {
-    const { queue: q, index } = loadQueue();
-    if (index >= 0 && index < q.length) return q[index];
-    return null;
+// ---- 单例变量 ----
+let _audio = null;
+let _currentSong = null;
+let _likedSet = loadLikedSongs();
+let _retryCount = 0;
+const MAX_RETRIES = 2;
+
+// 队列单例
+let _queue = [];
+let _queueIndex = -1;
+
+// 广播 listeners（Set of setState functions）
+const _listeners = new Set();
+
+/** 向所有已注册 listener 广播 state 更新 */
+function broadcast(partial) {
+  for (const setter of _listeners) {
+    setter(s => ({ ...s, ...partial }));
+  }
+}
+
+/** 初始化/获取全局 Audio 实例 */
+function getAudio() {
+  if (!_audio) {
+    _audio = new Audio();
+    _audio.addEventListener('timeupdate', () => {
+      broadcast({ currentTime: _audio.currentTime * 1000 });
+    });
+    _audio.addEventListener('loadedmetadata', () => {
+      broadcast({ duration: _audio.duration * 1000 });
+    });
+    _audio.addEventListener('ended', () => {
+      broadcast({ playing: false, currentTime: 0 });
+      const nextIdx = _queueIndex + 1;
+      if (nextIdx < _queue.length) {
+        _queueIndex = nextIdx;
+        playSongInternal(_queue[nextIdx]);
+        setTimeout(() => broadcast({ queue: [..._queue], queueIndex: nextIdx }), 0);
+      }
+    });
+    _audio.addEventListener('error', () => {
+      if (_currentSong?.id) refreshAndResume();
+      else broadcast({ playing: false });
+    });
+  }
+  return _audio;
+}
+
+/** 内部播放函数 */
+async function playSongInternal(song) {
+  if (!song) return;
+  let url = song.url;
+  if (!url && song.id) {
+    try {
+      const info = await api.getSongUrl(song.id);
+      url = info.url;
+    } catch (e) {
+      console.error('[player] 获取链接失败:', e.message);
+      return;
+    }
+  }
+  if (!url) return;
+
+  const audio = getAudio();
+  _retryCount = 0;
+  audio.src = url;
+
+  audio.play().then(() => {
+    const songWithUrl = { ...song, url };
+    _currentSong = songWithUrl;
+    const isLiked = song.id && _likedSet.has(String(song.id));
+    broadcast({
+      currentSong: songWithUrl,
+      liked: isLiked,
+      playing: true,
+      currentTime: 0,
+    });
+    if (song.id) api.reportPlay(String(song.id), song.name, song.artist).catch(() => {});
+  }).catch(err => {
+    console.error('[player] 播放失败:', err);
   });
-  const [playing, setPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [liked, setLiked] = useState(false);
-  const likedSetRef = useRef(loadLikedSongs());
-  const retryCountRef = useRef(0);
-  const MAX_RETRIES = 2;
+}
 
-  // 队列状态
-  const [queue, setQueue] = useState(() => loadQueue().queue);
-  const [queueIndex, setQueueIndex] = useState(() => loadQueue().index);
-  const queueRef = useRef(queue);
-  const queueIndexRef = useRef(queueIndex);
+async function refreshAndResume() {
+  const song = _currentSong;
+  const audio = getAudio();
+  if (!song?.id) return;
 
-  // 保持 ref 同步
-  useEffect(() => { queueRef.current = queue; }, [queue]);
-  useEffect(() => { queueIndexRef.current = queueIndex; }, [queueIndex]);
+  if (_retryCount >= MAX_RETRIES) {
+    _retryCount = 0;
+    broadcast({ playing: false });
+    return;
+  }
+  _retryCount++;
+  const savedTime = audio.currentTime;
+  try {
+    const info = await api.getSongUrl(song.id);
+    if (!info.url) { broadcast({ playing: false }); return; }
+    audio.src = info.url;
+    audio.currentTime = Math.min(savedTime, audio.duration || 0);
+    await audio.play();
+    _retryCount = 0;
+    broadcast({ playing: true });
+  } catch (e) {
+    broadcast({ playing: false });
+  }
+}
+
+// ========================
+// 公开 Hook
+// ========================
+
+export function usePlayer() {
+  // 每个调用者有自己的 React state，但初始值来自共享单例
+  const [state, setState] = useState(() => {
+    const init = loadQueue();
+    _queue = init.queue;
+    _queueIndex = init.index;
+    _currentSong = init.index >= 0 && init.index < init.queue.length ? init.queue[init.index] : null;
+    return {
+      currentSong: _currentSong,
+      playing: false,
+      currentTime: 0,
+      duration: 0,
+      liked: false,
+      queue: [..._queue],
+      queueIndex: _queueIndex,
+    };
+  });
+
+  // 注册 listener
+  useEffect(() => {
+    _listeners.add(setState);
+    // 同步当前最新状态到这个新 listener
+    setState({
+      currentSong: _currentSong,
+      playing: !_audio?.paused && !!_audio?.src,
+      currentTime: (_audio?.currentTime || 0) * 1000,
+      duration: (_audio?.duration || 0) * 1000,
+      liked: _currentSong?.id ? _likedSet.has(String(_currentSong.id)) : false,
+      queue: [..._queue],
+      queueIndex: _queueIndex,
+    });
+    return () => { _listeners.delete(setState); };
+  }, []);
 
   // 持久化队列
   useEffect(() => {
-    saveQueueData(queue, queueIndex);
-  }, [queue, queueIndex]);
+    saveQueueData(state.queue, state.queueIndex);
+  }, [state.queue, state.queueIndex]);
 
-  // 保持 currentSongRef 与 currentSong 同步
-  useEffect(() => {
-    if (currentSong) {
-      currentSongRef.current = currentSong;
-    }
-  }, [currentSong]);
+  // ====================
+  // API 函数
+  // ====================
 
-  // 内部：播放一首歌（共享逻辑，不改变队列）
-  const playSong = useCallback(async (song) => {
-    if (!song) return;
-
-    let url = song.url;
-    if (!url && song.id) {
-      try {
-        const info = await api.getSongUrl(song.id);
-        url = info.url;
-      } catch (err) {
-        console.error('获取播放链接失败:', err);
-        return;
-      }
-    }
-    if (!url) return;
-
-    const audio = audioRef.current;
-    audio.src = url;
-    retryCountRef.current = 0;
-
-    audio.play().then(() => {
-      setPlaying(true);
-      setCurrentTime(0);
-      const songWithUrl = { ...song, url };
-      setCurrentSong(songWithUrl);
-      currentSongRef.current = songWithUrl;
-      const isLiked = song.id && likedSetRef.current.has(String(song.id));
-      setLiked(isLiked);
-      if (song.id) {
-        api.reportPlay(String(song.id), song.name, song.artist).catch(() => {});
-      }
-    }).catch(err => {
-      console.error('播放失败:', err);
-    });
-  }, []);
-
-  // 内部：播放队列中指定位置的歌曲
-  const playQueueItem = useCallback(async (index) => {
-    const q = queueRef.current;
-    if (index < 0 || index >= q.length) return;
-    setQueueIndex(index);
-    await playSong(q[index]);
-  }, [playSong]);
-
-  // 刷新播放 URL 并继续播放
-  const refreshAndResume = useCallback(async () => {
-    const song = currentSongRef.current;
-    const audio = audioRef.current;
-    if (!song?.id || !audio) return;
-
-    if (retryCountRef.current >= MAX_RETRIES) {
-      console.warn('播放重试次数已达上限，停止重试');
-      retryCountRef.current = 0;
-      setPlaying(false);
-      return;
-    }
-
-    retryCountRef.current += 1;
-    const savedTime = audio.currentTime;
-    console.log(`[Player] URL 可能已过期，正在刷新... (第 ${retryCountRef.current} 次)`);
-
-    try {
-      const info = await api.getSongUrl(song.id);
-      if (!info.url) {
-        console.error('[Player] 刷新 URL 失败：无有效链接');
-        setPlaying(false);
-        return;
-      }
-      audio.src = info.url;
-      audio.currentTime = Math.min(savedTime, audio.duration || 0);
-      await audio.play();
-      setPlaying(true);
-      retryCountRef.current = 0;
-    } catch (err) {
-      console.error('[Player] 刷新 URL 失败:', err);
-      setPlaying(false);
-    }
-  }, []);
-
-  // 初始化 audio 元素
-  useEffect(() => {
-    const audio = new Audio();
-    audioRef.current = audio;
-
-    audio.addEventListener('timeupdate', () => {
-      setCurrentTime(audio.currentTime * 1000);
-    });
-
-    audio.addEventListener('loadedmetadata', () => {
-      setDuration(audio.duration * 1000);
-    });
-
-    audio.addEventListener('ended', () => {
-      setPlaying(false);
-      setCurrentTime(0);
-      retryCountRef.current = 0;
-      // 自动播放下一首
-      const nextIndex = queueIndexRef.current + 1;
-      const q = queueRef.current;
-      if (nextIndex < q.length) {
-        setQueueIndex(nextIndex);
-        playSong(q[nextIndex]);
-      }
-    });
-
-    audio.addEventListener('error', () => {
-      const mediaErr = audio.error;
-      console.error('[Player] Audio error:', mediaErr?.message || 'unknown', 'code:', mediaErr?.code);
-      if (currentSongRef.current?.id) {
-        refreshAndResume();
-      } else {
-        setPlaying(false);
-      }
-    });
-
-    return () => {
-      audio.pause();
-      audio.src = '';
-    };
-  }, [refreshAndResume, playSong]);
-
-  // 将歌曲插入队列当前位置+1并播放（点击聊天区歌曲卡片时用）
-  // 如果歌曲已在队列中，直接跳转播放（不去重插入）
   const insertAndPlay = useCallback(async (song) => {
     if (!song) return;
-    const songObj = {
-      id: song.id,
-      name: song.name,
-      artist: song.artist,
-      album: song.album,
-      coverUrl: song.coverUrl,
-      duration: song.duration,
-    };
-    const q = queueRef.current;
-    // 去重：如果已在队列中，直接跳转
-    const existingIndex = q.findIndex(s => String(s.id) === String(songObj.id));
-    if (existingIndex >= 0) {
-      setQueueIndex(existingIndex);
-      await playSong(q[existingIndex]);
+    const songObj = { id: song.id, name: song.name, artist: song.artist, album: song.album, coverUrl: song.coverUrl, duration: song.duration };
+    const existingIdx = _queue.findIndex(s => String(s.id) === String(songObj.id));
+    if (existingIdx >= 0) {
+      _queueIndex = existingIdx;
+      broadcast({ queue: [..._queue], queueIndex: existingIdx });
+      playSongInternal(_queue[existingIdx]);
       return;
     }
-    // 不在队列中，插入到当前位置+1
-    const currentIdx = queueIndexRef.current;
-    const newQueue = [...q.slice(0, currentIdx + 1), songObj, ...q.slice(currentIdx + 1)];
-    setQueue(newQueue);
-    setQueueIndex(currentIdx + 1);
-    await playSong(songObj);
-  }, [playSong]);
+    _queue.splice(_queueIndex + 1, 0, songObj); // 插入到当前之后
+    _queueIndex += 1;
+    broadcast({ queue: [..._queue], queueIndex: _queueIndex });
+    playSongInternal(songObj);
+  }, []);
 
-  // 直接播放一首歌（清空队列，重新开始）
   const play = useCallback(async (song) => {
     if (!song) return;
     const newQueue = [{ id: song.id, name: song.name, artist: song.artist, album: song.album, coverUrl: song.coverUrl, duration: song.duration }];
-    setQueue(newQueue);
-    setQueueIndex(0);
-    await playSong(song);
-  }, [playSong]);
+    _queue = newQueue;
+    _queueIndex = 0;
+    broadcast({ queue: [...newQueue], queueIndex: 0 });
+    playSongInternal(newQueue[0]);
+  }, []);
 
-  // 推荐歌曲入队并播放第一首
   const enqueueAndPlay = useCallback(async (songs) => {
     if (!songs?.length) return;
     const cleanSongs = songs.map(s => ({
-      id: s.id,
-      name: s.name,
-      artist: s.artist,
-      album: s.album,
-      coverUrl: s.coverUrl,
-      duration: s.duration,
+      id: s.id, name: s.name, artist: s.artist, album: s.album, coverUrl: s.coverUrl, duration: s.duration,
     }));
-    setQueue(cleanSongs);
-    setQueueIndex(0);
-    await playSong(cleanSongs[0]);
-  }, [playSong]);
+    // 追加到当前位置之后
+    _queue = [..._queue.slice(0, _queueIndex + 1), ...cleanSongs, ..._queue.slice(_queueIndex + 1)];
+    const nextIdx = _queueIndex + 1;
+    _queueIndex = nextIdx;
+    broadcast({ queue: [..._queue], queueIndex: nextIdx });
+    playSongInternal(_queue[nextIdx]);
+  }, []);
 
-  // 添加歌曲到队列末尾（兼容单个对象或数组，自动去重）
   const addToQueue = useCallback((songs) => {
     const list = Array.isArray(songs) ? songs : [songs];
-    if (list.length === 0) return;
-    const q = queueRef.current;
-    const existingIds = new Set(q.map(s => String(s.id)));
-    const newSongs = [];
-    for (const s of list) {
-      const id = String(s.id);
-      if (!existingIds.has(id)) {
-        existingIds.add(id);
-        newSongs.push({
-          id: s.id,
-          name: s.name,
-          artist: s.artist,
-          album: s.album,
-          coverUrl: s.coverUrl,
-          duration: s.duration,
-        });
-      }
-    }
-    if (newSongs.length === 0) return; // 全部已存在，跳过
-    setQueue(prev => [...prev, ...newSongs]);
+    if (!list.length) return;
+    const ids = new Set(_queue.map(s => String(s.id)));
+    const newSongs = list.filter(s => !ids.has(String(s.id))).map(s => ({
+      id: s.id, name: s.name, artist: s.artist, album: s.album, coverUrl: s.coverUrl, duration: s.duration,
+    }));
+    if (!newSongs.length) return;
+    _queue.push(...newSongs);
+    broadcast({ queue: [..._queue] });
   }, []);
 
-  // 下一首
   const playNext = useCallback(() => {
-    const nextIndex = queueIndexRef.current + 1;
-    const q = queueRef.current;
-    if (nextIndex < q.length) {
-      setQueueIndex(nextIndex);
-      playSong(q[nextIndex]);
+    const nextIdx = _queueIndex + 1;
+    if (nextIdx < _queue.length) {
+      _queueIndex = nextIdx;
+      broadcast({ queue: [..._queue], queueIndex: nextIdx });
+      playSongInternal(_queue[nextIdx]);
     }
-  }, [playSong]);
+  }, []);
 
-  // 上一首（>3秒重头播，否则上一首）
   const playPrevious = useCallback(() => {
-    const audio = audioRef.current;
+    const audio = getAudio();
     if (audio.currentTime > 3) {
       audio.currentTime = 0;
-      setCurrentTime(0);
+      broadcast({ currentTime: 0 });
       return;
     }
-    const prevIndex = queueIndexRef.current - 1;
-    if (prevIndex >= 0) {
-      const q = queueRef.current;
-      setQueueIndex(prevIndex);
-      playSong(q[prevIndex]);
+    const prevIdx = _queueIndex - 1;
+    if (prevIdx >= 0) {
+      _queueIndex = prevIdx;
+      broadcast({ queue: [..._queue], queueIndex: prevIdx });
+      playSongInternal(_queue[prevIdx]);
     }
-  }, [playSong]);
+  }, []);
 
-  // 停止播放，清空队列
   const stop = useCallback(() => {
-    const audio = audioRef.current;
+    const audio = getAudio();
     audio.pause();
     audio.src = '';
-    setPlaying(false);
-    setCurrentTime(0);
-    setCurrentSong(null);
-    currentSongRef.current = null;
-    setQueue([]);
-    setQueueIndex(-1);
+    _currentSong = null;
+    _queue = [];
+    _queueIndex = -1;
+    broadcast({ playing: false, currentTime: 0, currentSong: null, queue: [], queueIndex: -1 });
   }, []);
 
-  // 清空队列（不停止当前播放）
   const clearQueue = useCallback(() => {
-    setQueue([]);
-    setQueueIndex(-1);
+    _queue = [];
+    _queueIndex = -1;
+    broadcast({ queue: [], queueIndex: -1 });
   }, []);
 
-  // 从队列中移除指定歌曲
   const removeFromQueue = useCallback((index) => {
-    const currentIndex = queueIndexRef.current;
-    const q = queueRef.current;
+    const currentIdx = _queueIndex;
+    if (index < 0 || index >= _queue.length) return;
 
-    if (index < 0 || index >= q.length) return;
+    _queue.splice(index, 1);
 
-    setQueue(prev => prev.filter((_, i) => i !== index));
-
-    if (index === currentIndex) {
-      // 移除的是当前播放的歌 → 播下一首或停止
-      const nextIndex = index < q.length - 1 ? index : index - 1;
-      if (nextIndex >= 0 && nextIndex < q.length - 1) {
-        setQueueIndex(nextIndex);
-        playSong(q.filter((_, i) => i !== index)[nextIndex]);
+    if (index === currentIdx) {
+      const nextIdx = index < _queue.length ? index : index - 1;
+      if (nextIdx >= 0) {
+        _queueIndex = nextIdx;
+        broadcast({ queue: [..._queue], queueIndex: nextIdx });
+        playSongInternal(_queue[nextIdx]);
       } else {
-        // 队列空了
-        const audio = audioRef.current;
-        audio.pause();
-        audio.src = '';
-        setPlaying(false);
-        setCurrentSong(null);
-        currentSongRef.current = null;
-        setQueueIndex(-1);
+        const audio = getAudio();
+        audio.pause(); audio.src = '';
+        _currentSong = null; _queueIndex = -1;
+        broadcast({ playing: false, currentSong: null, queue: [..._queue], queueIndex: -1 });
       }
-    } else if (index < currentIndex) {
-      // 移除在当前之前 → index 减 1
-      setQueueIndex(prev => prev - 1);
+    } else if (index < currentIdx) {
+      _queueIndex -= 1;
+      broadcast({ queue: [..._queue], queueIndex: _queueIndex });
+    } else {
+      broadcast({ queue: [..._queue] });
     }
-  }, [playSong]);
+  }, []);
+
+  // 点击队列中某首 → 移到当前播放位置并立即播放
+  const jumpToTrack = useCallback((targetIndex) => {
+    if (targetIndex < 0 || targetIndex >= _queue.length) return;
+    if (targetIndex === _queueIndex) return; // 已经是当前曲目
+
+    const targetSong = _queue[targetIndex];
+    // 从原位置移除
+    _queue.splice(targetIndex, 1);
+    // 插入到当前播放位置之后（成为下一首播放）
+    _queue.splice(_queueIndex + 1, 0, targetSong);
+    _queueIndex += 1;
+    broadcast({ queue: [..._queue], queueIndex: _queueIndex });
+    playSongInternal(targetSong);
+  }, []);
 
   const togglePlay = useCallback(async () => {
-    const audio = audioRef.current;
-    const song = currentSongRef.current;
-    if (!audio.src && !song) return;
-
-    if (playing) {
+    const audio = getAudio();
+    if (!audio.src && !_currentSong) return;
+    if (state.playing) {
       audio.pause();
-      setPlaying(false);
+      broadcast({ playing: false });
     } else {
-      // 无 src 时先获取播放链接
-      if (!audio.src && song?.id) {
-        await playSong(song);
-        return;
-      }
-      try {
-        await audio.play();
-        setPlaying(true);
-      } catch (err) {
-        console.warn('[Player] 直接播放失败，尝试刷新 URL:', err.message);
-        await refreshAndResume();
-      }
+      if (!audio.src && _currentSong?.id) { playSongInternal(_currentSong); return; }
+      try { await audio.play(); broadcast({ playing: true }); }
+      catch (err) { refreshAndResume(); }
     }
-  }, [playing, refreshAndResume, playSong]);
+  }, [state.playing]);
 
   const seek = useCallback((ratio) => {
-    if (!audioRef.current.duration) return;
-    audioRef.current.currentTime = audioRef.current.duration * ratio;
-    setCurrentTime(audioRef.current.currentTime * 1000);
+    const audio = getAudio();
+    if (!audio.duration) return;
+    audio.currentTime = audio.duration * ratio;
+    broadcast({ currentTime: audio.currentTime * 1000 });
   }, []);
 
   const toggleLike = useCallback(() => {
-    const songId = currentSongRef.current?.id ? String(currentSongRef.current.id) : null;
+    const songId = _currentSong?.id ? String(_currentSong.id) : null;
     if (songId) {
-      if (likedSetRef.current.has(songId)) {
-        likedSetRef.current.delete(songId);
-      } else {
-        likedSetRef.current.add(songId);
-      }
-      saveLikedSongs(likedSetRef.current);
+      if (_likedSet.has(songId)) _likedSet.delete(songId);
+      else _likedSet.add(songId);
+      saveLikedSongs(_likedSet);
     }
-    setLiked(v => !v);
-  }, [currentSong]);
+    broadcast({ liked: !state.liked });
+  }, [state.liked]);
 
   return {
-    currentSong,
-    playing,
-    currentTime,
-    duration,
-    liked,
-    queue,
-    queueIndex,
+    ...state,
     insertAndPlay,
-    // 播放
     play,
     togglePlay,
     seek,
     toggleLike,
-    // 队列
     enqueueAndPlay,
     addToQueue,
     playNext,
@@ -423,7 +371,7 @@ export function usePlayer() {
     stop,
     clearQueue,
     removeFromQueue,
-    // 工具
+    jumpToTrack,
     formatTime,
   };
 }

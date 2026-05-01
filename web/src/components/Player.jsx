@@ -1,5 +1,7 @@
 // src/components/Player.jsx — 播放器组件（Treelio 风格）
 import { useState, useRef, useEffect } from 'react';
+import Queue from './Queue';
+import './Queue.css';
 
 export default function Player({
   currentSong,
@@ -133,9 +135,7 @@ export default function Player({
             ■ END
           </button>
         </div>
-        <span className="player__queue-info">
-          QUEUE <strong>{queuePos} TRACKS</strong>
-        </span>
+        <Queue />
       </div>
     </>
   );

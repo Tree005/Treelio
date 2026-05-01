@@ -56,9 +56,6 @@ function MessageBubble({ msg, onPlaySong, onAddToQueue }) {
         </div>
         <div className="message__meta">
           <span className="message__time">{formatMsgTime(msg.time)}</span>
-          {!isUser && (
-            <span className="message__replay">REPLAY</span>
-          )}
         </div>
       </div>
     </div>

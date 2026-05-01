@@ -1,0 +1,270 @@
+/* src/components/Queue.css — 队列UI样式 */
+
+/* ========================
+   胶囊徽章 (Badge)
+   ======================== */
+.queue-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  background: var(--bg-input);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.queue-badge:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.queue-badge.is-open {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.queue-badge .queue-count {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.queue-badge .queue-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.queue-badge .queue-count:empty,
+.queue-badge .queue-label:empty {
+  display: none;
+}
+
+/* ========================
+   下拉面板 (Dropdown)
+   ======================== */
+.queue-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  animation: queueSlideUp 0.2s ease-out;
+}
+
+/* 自定义滚动条 */
+.queue-dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.queue-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.queue-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}
+
+.queue-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* 入场动画 */
+@keyframes queueSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================
+   曲目行 (Item)
+   ======================== */
+.queue-list {
+  padding: 8px 0;
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.queue-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.queue-item.is-current {
+  background: var(--bg-input);
+  border-left: 3px solid var(--accent);
+}
+
+/* 左侧：图标 + 歌曲名 */
+.queue-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.queue-item-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.queue-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.queue-item.is-current .queue-item-name {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 右侧：时长 + X按钮 */
+.queue-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.queue-item-duration {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 移除按钮 */
+.queue-item-remove {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.queue-item:hover .queue-item-remove {
+  opacity: 1;
+}
+
+.queue-item-remove svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--text-tertiary);
+  transition: fill 0.15s ease;
+}
+
+.queue-item-remove:hover svg {
+  fill: var(--on-air);
+}
+
+/* 当前曲目禁用移除按钮 */
+.queue-item.is-current .queue-item-remove {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.queue-item.is-current .queue-item-remove:hover {
+  background: transparent;
+}
+
+.queue-item.is-current .queue-item-remove:hover svg {
+  fill: #888;
+}
+
+/* ========================
+   空状态
+   ======================== */
+.queue-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: #888;
+}
+
+.queue-empty-text {
+  font-size: 13px;
+}
+
+/* ========================
+   Toast 提示
+   ======================== */
+.queue-toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  z-index: 2000;
+  animation: toastFadeIn 0.2s ease;
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ========================
+   响应式
+   ======================== */
+@media (max-width: 480px) {
+  .queue-dropdown {
+    width: 280px;
+    right: -8px;
+  }
+
+  .queue-badge {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+}
