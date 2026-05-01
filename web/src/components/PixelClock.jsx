@@ -15,21 +15,17 @@ export default function PixelClock({ playing = false }) {
     hour12: false,
   });
 
+  // 格式: "Monday 20 APR 2026"
   const weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
-  const dateStr = now.toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+  const day = now.getDate();
+  const month = now.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const year = now.getFullYear();
+  const dateStr = `${weekday} ${day} ${month} ${year}`;
 
   return (
     <>
       <div className="clock-time">{timeStr}</div>
-      <div className="clock-date">
-        {weekday}
-        <br />
-        {dateStr}
-      </div>
+      <div className="clock-date">{dateStr}</div>
       <div className={`on-air${playing ? ' on-air--active' : ''}`}>
         <span className="on-air__dot" />
         {playing ? 'ON AIR' : 'STANDBY'}
