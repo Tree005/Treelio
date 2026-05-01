@@ -81,13 +81,13 @@ body::before {
   position: fixed;
   inset: 0;
   background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.6) 3px, transparent 3px);
-  background-size: 24px 24px;
+    radial-gradient(circle, rgba(255, 255, 255, 0.5) 2px, transparent 2px);
+  background-size: 28px 28px;
   background-position: center center;
   pointer-events: none;
   z-index: 0;
   transition: opacity 0.6s ease;
-  opacity: 0.9;
+  opacity: 0.8;
 }
 
 /* 播放时的呼吸动画 */
@@ -96,8 +96,8 @@ body.playing::before {
 }
 
 @keyframes grid-breathe {
-  0%, 100% { opacity: 0.9; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 0.95; }
 }
 
 /* 自定义滚动条 */
