@@ -85,7 +85,6 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   background: transparent;
-  overflow: hidden;
   position: relative;
 }
 
@@ -294,30 +293,19 @@ body {
   50% { opacity: 0.3; }
 }
 
-/* ====== 播放器 ====== */
+/* ====== 播放器（横向条带）====== */
 .player {
-  padding: 0 14px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px 8px;
   flex-shrink: 0;
 }
 
-.player__card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 12px 16px;
-  box-shadow: var(--shadow-elevated);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.player__card:hover {
-  border-color: var(--border-light);
-}
-
-/* 主行 */
+/* 主行：频谱 + 歌曲信息 + 控制按钮 + 标签 + 音量 */
 .player__main-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* 频谱动画 */
@@ -325,9 +313,9 @@ body {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 18px;
+  height: 16px;
   flex-shrink: 0;
-  padding: 0 4px;
+  padding: 0 2px;
 }
 
 .player__wave-bar {
@@ -360,19 +348,19 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   overflow: hidden;
 }
 
 .player__song-name {
   font-family: 'VT323', monospace;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--text);
   letter-spacing: 0.04em;
   line-height: 1;
   overflow: hidden;
   position: relative;
-  height: 20px;
+  height: 18px;
 }
 
 .player__song-name-inner {
@@ -434,8 +422,8 @@ body {
 }
 
 .player__btn--circle {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border: 1px solid var(--border);
   border-radius: 50%;
   transition: all 0.25s ease;
@@ -457,7 +445,6 @@ body {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  margin-left: 4px;
 }
 
 .player__tag {
@@ -487,10 +474,10 @@ body {
 
 /* 音量滑块 */
 .player__vol-slider {
-  width: 56px;
+  width: 48px;
   flex-shrink: 0;
   cursor: pointer;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .player__vol-track {
@@ -524,16 +511,16 @@ body {
 .player__progress-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .player__time {
   font-family: 'VT323', monospace;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-dim);
   flex-shrink: 0;
-  min-width: 36px;
+  min-width: 32px;
   line-height: 1;
 }
 
@@ -543,23 +530,35 @@ body {
 
 .player__progress-bar {
   flex: 1;
-  height: 3px;
+  height: 2px;
   background: var(--border);
-  border-radius: 1.5px;
+  border-radius: 1px;
   cursor: pointer;
   position: relative;
   transition: height 0.15s ease;
 }
 
 .player__progress-bar:hover {
-  height: 5px;
+  height: 4px;
 }
 
 .player__progress-fill {
   height: 100%;
   background: var(--accent);
-  border-radius: 1.5px;
+  border-radius: 1px;
   transition: width 0.3s linear;
+}
+
+/* 队列信息 */
+.player__queue-info {
+  font-family: 'VT323', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  text-transform: uppercase;
+  padding: 4px 0 8px;
+  text-align: center;
+  opacity: 0.8;
 }
 
 /* ====== 聊天区域 ====== */

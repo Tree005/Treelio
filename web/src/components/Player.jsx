@@ -54,7 +54,7 @@ export default function Player({
   }
 
   return (
-    <div className="player__card">
+    <>
       {/* 主行：频谱 + 歌曲信息 + 控制按钮 + 标签 + 音量 */}
       <div className="player__main-row">
         {/* 左侧：频谱 */}
@@ -118,11 +118,6 @@ export default function Player({
 
         {/* 标签组 */}
         <div className="player__tags">
-          {queueLen > 1 && (
-            <span className="player__tag player__tag--queue">
-              {queuePos}/{queueLen}
-            </span>
-          )}
           <span className={`player__tag ${liked ? 'player__tag--active' : ''}`}>FAV</span>
           <span className="player__tag">VOL</span>
         </div>
@@ -144,6 +139,13 @@ export default function Player({
         </div>
         <span className="player__time">{formatTime(duration)}</span>
       </div>
-    </div>
+
+      {/* 队列信息 */}
+      {queueLen > 0 && (
+        <div className="player__queue-info">
+          QUEUE {queuePos}/{queueLen}
+        </div>
+      )}
+    </>
   );
 }
