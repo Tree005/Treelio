@@ -14,14 +14,16 @@ export default function App() {
   const player = usePlayer();
   const { messages, loading, sendMessage } = useChat(player.play, player.enqueueAndPlay);
 
-  // 播放时给 body 加 playing 类，触发点阵呼吸动画
+  // 播放时给卡片加 playing 类，触发点阵呼吸动画
   useEffect(() => {
+    const card = document.querySelector('.app__card');
+    if (!card) return;
     if (player.playing) {
-      document.body.classList.add('playing');
+      card.classList.add('playing');
     } else {
-      document.body.classList.remove('playing');
+      card.classList.remove('playing');
     }
-    return () => document.body.classList.remove('playing');
+    return () => { if (card) card.classList.remove('playing'); };
   }, [player.playing]);
 
   return (
