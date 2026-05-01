@@ -52,11 +52,14 @@ export function useChat(onPlaySong, onEnqueueSongs) {
     try {
       const result = await api.chat(text.trim());
 
+      // 适配新的返回格式 {say, play[], reason, segue}
       const claudioMsg = {
         id: Date.now() + 1,
         role: 'claudio',
-        content: result.reply || '',
-        songs: result.songs || [],
+        content: result.say || result.reply || '',  // 兼容旧格式
+        songs: result.play || result.songs || [],   // 兼容旧格式
+        reason: result.reason || '',
+        segue: result.segue || '',
         mood: result.mood || 'neutral',
         time: new Date(),
       };
@@ -64,8 +67,8 @@ export function useChat(onPlaySong, onEnqueueSongs) {
       setMessages(prev => [...prev, claudioMsg]);
 
       // AI 推荐歌曲 → 全部入队并播放第一首
-      if (result.songs?.length > 0 && result.songs[0].id && onEnqueueSongs) {
-        onEnqueueSongs(result.songs);
+      if (result.play?.length > 0 && result.play[0].id && onEnqueueSongs) {
+        onEnqueueSongs(result.play);
       }
     } catch (err) {
       const errMsg = {
