@@ -24,10 +24,11 @@ router.get('/stats', async (req, res) => {
     if (artistRows.length > 0) totalArtists = artistRows[0].values[0][0] || 0;
   } catch {}
 
+  // play_history 没有 duration 列，用播放次数 × 3.5 分钟估算
   try {
-    const hoursRows = db.exec('SELECT SUM(duration) as total FROM play_history');
-    if (hoursRows.length > 0 && hoursRows[0].values[0][0]) {
-      totalHours = Math.round(hoursRows[0].values[0][0] / 3600);
+    const hoursRows = db.exec('SELECT COUNT(*) as c FROM play_history');
+    if (hoursRows.length > 0) {
+      totalHours = Math.round((hoursRows[0].values[0][0] * 3.5) / 60);
     }
   } catch {}
 
