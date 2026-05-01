@@ -32,7 +32,7 @@ export default function App() {
       <header className="header">
         <div className="brand" onClick={() => setShowProfile(true)} style={{ cursor: 'pointer' }}>
           <img className="brand__avatar" src="/Treelio.jpg" alt="Treelio" />
-          T<span className="brand__highlight">r</span>eelio
+          Treelio
         </div>
         <div className="header-actions">
           <button className="btn-login">LOGIN</button>
@@ -73,23 +73,6 @@ export default function App() {
           />
         </section>
       </div>
-
-      {/* 底栏 — 连接状态 */}
-      <footer className="connection-row">
-        <div className="conn-left">
-          <span className="conn-artist">Treelio</span>
-          <span className="badge-live">LIVE</span>
-        </div>
-        <div className="conn-middle">
-          <span>Connect</span>
-          <span className="conn-dot-sep"></span>
-          <span>io server</span>
-        </div>
-        <div className="conn-status">
-          <span className="conn-dot-green"></span>
-          CONNECTED
-        </div>
-      </footer>
 
       {/* Profile 弹出层 */}
       {showProfile && (

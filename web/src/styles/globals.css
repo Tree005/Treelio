@@ -240,6 +240,10 @@ body {
 .brand__highlight {
   color: var(--accent);
   transition: color var(--transition-smooth);
+  margin: 0;
+  padding: 0;
+  display: inline;
+  letter-spacing: inherit;
 }
 
 .header-actions {
@@ -662,7 +666,7 @@ body {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 14px 18px;
+  padding: 10px 18px 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -958,14 +962,14 @@ body {
   cursor: not-allowed;
 }
 
-/* ====== 底栏 — 连接状态 ====== */
+/* ====== 聊天头部 — 连接状态 ====== */
 .connection-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.6rem;
-  padding: 0.65rem 0;
+  padding: 0.55rem 18px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   font-size: 0.73rem;
@@ -985,14 +989,14 @@ body {
 }
 
 .badge-live {
-  background: var(--on-air);
-  color: #fff;
+  background: none;
+  color: var(--connected);
   font-size: 0.58rem;
   font-weight: 700;
-  padding: 0.12rem 0.5rem;
-  border-radius: var(--radius-full);
+  padding: 0;
+  border-radius: 0;
   letter-spacing: 0.5px;
-  transition: background var(--transition-smooth);
+  transition: color var(--transition-smooth);
 }
 
 .conn-middle {
@@ -1028,7 +1032,8 @@ body {
   height: 6px;
   border-radius: 50%;
   background: var(--connected);
-  box-shadow: 0 0 6px var(--connected-glow);
+  box-shadow: 0 0 8px var(--connected-glow);
+  transition: all var(--transition-smooth);
 }
 
 /* ====== 加载动画 ====== */
