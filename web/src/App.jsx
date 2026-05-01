@@ -29,18 +29,18 @@ export default function App() {
   return (
     <div className="app">
       {/* 顶栏 */}
-      <header className="top-bar">
-        <div className="top-bar__logo" onClick={() => setShowProfile(true)} style={{ cursor: 'pointer' }}>
-          <img className="top-bar__avatar" src="/Treelio.jpg" alt="Treelio" />
-          <span>Treelio</span>
+      <header className="header">
+        <div className="brand" onClick={() => setShowProfile(true)} style={{ cursor: 'pointer' }}>
+          <img className="brand__avatar" src="/Treelio.jpg" alt="Treelio" />
+          T<span className="brand__highlight">r</span>eelio
         </div>
-        <div className="top-bar__actions">
-          <button className="top-bar__login">LOGIN</button>
-          <div className="theme-pills">
+        <div className="header-actions">
+          <button className="btn-login">LOGIN</button>
+          <div className="theme-toggles">
             {['daily', 'dark', 'light'].map(t => (
               <button
                 key={t}
-                className={`theme-pill${theme === t ? ' theme-pill--active' : ''}`}
+                className={`theme-btn${theme === t ? ' theme-btn--active' : ''}`}
                 onClick={() => switchTheme(t)}
               >
                 {t.toUpperCase()}
@@ -74,10 +74,21 @@ export default function App() {
         </section>
       </div>
 
-      {/* 底栏 */}
-      <footer className="footer">
-        <span>TREELIO FM</span>
-        <span className="footer__status">CONNECTED</span>
+      {/* 底栏 — 连接状态 */}
+      <footer className="connection-row">
+        <div className="conn-left">
+          <span className="conn-artist">Treelio</span>
+          <span className="badge-live">LIVE</span>
+        </div>
+        <div className="conn-middle">
+          <span>Connect</span>
+          <span className="conn-dot-sep"></span>
+          <span>io server</span>
+        </div>
+        <div className="conn-status">
+          <span className="conn-dot-green"></span>
+          CONNECTED
+        </div>
       </footer>
 
       {/* Profile 弹出层 */}

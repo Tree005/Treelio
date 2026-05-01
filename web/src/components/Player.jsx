@@ -116,7 +116,7 @@ export default function Player({
       <div className="player__row player__row--controls">
         <div className="player__controls">
           <button className="player__btn player__btn--pill" onClick={playPrevious} title="上一首" disabled={queueLen === 0}>
-            PREV
+            ◀ PREV
           </button>
           <button
             className="player__btn player__btn--pill player__btn--play"
@@ -124,17 +124,17 @@ export default function Player({
             title={playing ? '暂停' : '播放'}
             disabled={!currentSong}
           >
-            {playing ? 'PAUSE' : 'PLAY'}
+            {playing ? '❚❚ PAUSE' : '▶ PLAY'}
           </button>
           <button className="player__btn player__btn--pill" onClick={playNext} title="下一首" disabled={queueLen <= 1}>
-            NEXT
+            NEXT ▶
           </button>
           <button className="player__btn player__btn--pill" onClick={stop} title="停止" disabled={queueLen === 0}>
-            END
+            ■ END
           </button>
         </div>
         <span className="player__queue-info">
-          QUEUE&nbsp;&nbsp;<strong>{queuePos} TRACKS</strong>
+          QUEUE <strong>{queuePos} TRACKS</strong>
         </span>
       </div>
     </>

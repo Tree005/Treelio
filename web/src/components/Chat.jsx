@@ -84,14 +84,21 @@ export default function Chat({ messages, loading, onSend, onPlaySong, onAddToQue
 
   return (
     <>
-      {/* 聊天头部 */}
-      <div className="chat__header">
-        <div className="chat__header-left">
-          <span className="chat__dj-dot" />
-          <span className="chat__dj-name">Treelio</span>
-          <span className="chat__live">LIVE</span>
+      {/* 连接状态 */}
+      <div className="connection-row">
+        <div className="conn-left">
+          <span className="conn-artist">Treelio</span>
+          <span className="badge-live">LIVE</span>
         </div>
-        <span className="chat__status">Connected to Treelio server</span>
+        <div className="conn-middle">
+          <span>Connect</span>
+          <span className="conn-dot-sep"></span>
+          <span>io server</span>
+        </div>
+        <div className="conn-status">
+          <span className="conn-dot-green"></span>
+          CONNECTED
+        </div>
       </div>
 
       {/* 消息列表 */}
