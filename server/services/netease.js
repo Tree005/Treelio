@@ -57,10 +57,34 @@ export async function getLyric(id) {
 }
 
 // 根据歌名+艺人搜索（用于 AI 推荐后的精确匹配）
+// 新增：搜索后校验艺人名，减少"同名不同人"误匹配
 export async function findSong(name, artist) {
   const keyword = artist ? `${name} ${artist}` : name;
-  const results = await searchSongs(keyword, 3);
-  return results.find(s =>
-    s.name === name || s.name.toLowerCase() === name.toLowerCase()
-  ) || results[0] || null;
+  const results = await searchSongs(keyword, 5);
+
+  if (results.length === 0) return null;
+
+  // 艺人名校验：大小写不敏感，支持部分匹配
+  if (artist) {
+    const artistLower = artist.toLowerCase();
+    const matched = results.find(s => {
+      const songArtist = (s.artist || '').toLowerCase();
+      return songArtist.includes(artistLower) || artistLower.includes(songArtist.replace(/\s*\/\s*/g, ''));
+    });
+    if (matched) {
+      console.log(`[findSong] 艺人匹配 ✓ "${name}" - "${matched.artist}"`);
+      return matched;
+    }
+    // 没匹配到，打 warn 但返回第一名结果
+    console.warn(`[findSong] 艺人不匹配 ⚠️ 期望:"${artist}" 实际:"${results[0].artist}" | 歌名:"${name}"`);
+  }
+
+  // 歌名精确匹配（忽略大小写）
+  const nameMatched = results.find(s =>
+    s.name.toLowerCase() === name.toLowerCase()
+  );
+  if (nameMatched) return nameMatched;
+
+  // 兜底：返回第一个结果
+  return results[0];
 }
