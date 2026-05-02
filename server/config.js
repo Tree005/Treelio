@@ -27,11 +27,21 @@ export default {
   port: parseInt(env.PORT || '8080', 10),
   nodeEnv: env.NODE_ENV || 'development',
 
+  // AI 服务：deepseek（API）/ claude（CLI 子进程）
+  aiProvider: env.AI_PROVIDER || 'deepseek',
+
   // DeepSeek
   deepseek: {
     apiKey: env.DEEPSEEK_API_KEY,
     model: env.DEEPSEEK_MODEL || 'deepseek-chat',
     baseUrl: 'https://api.deepseek.com',
+  },
+
+  // Claude CLI 子进程
+  claude: {
+    dir: env.CLAUDE_DIR || 'D:\\Tree\\Treelio',
+    timeout: parseInt(env.CLAUDE_TIMEOUT || '120000', 10),
+    model: env.CLAUDE_MODEL || '',
   },
 
   // 网易云

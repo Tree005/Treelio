@@ -115,7 +115,14 @@ export function route(message) {
   if (isNextCommand(text))  return { intent: INTENT.NEXT, params: {} };
   if (isReplayCommand(text)) return { intent: INTENT.REPLAY, params: {} };
 
-  // ========== 2. 量词优先（必须在 PLAY_NOW 之前）==========
+  // ========== 2. 疑问句优先（必须在量词检测之前）==========
+  // "为什么推荐这两首" — 量词检测会识别"两首"但这是个问题，不是要歌
+  // 疑问句走 CHAT，让 Claude 直接回答
+  if (/^(?:为什么|怎么|啥|哪|谁|如何|解释|说说|讲一下)\s*/i.test(text)) {
+    return { intent: INTENT.CHAT, params: {} };
+  }
+
+  // ========== 3. 量词优先（必须在 PLAY_NOW 之前）==========
   // "多来几首/放两首/想听几首/来点/再来几首" → PLAYLIST
   // 这些不应该被 play now 拦截去搜歌名
 
@@ -159,7 +166,7 @@ export function route(message) {
     };
   }
 
-  // ========== 4. 推荐类指令（PLAYLIST）==========
+  // ========== 5. 推荐类指令（PLAYLIST）==========
 
   // "来xxx" / "来点xxx" — 纯"来"开头但没量词的推荐（如"来点轻松的"）
   let playlistMatch = text.match(/^(?:来|来点)\s*(.+)?$/i);
@@ -171,6 +178,7 @@ export function route(message) {
   }
 
   // "推荐xxx" / "推荐几首xxx" / "推荐点xxx"
+  // 疑问句（为什么推荐/怎么推荐）已被上方的疑问句检测拦截
   playlistMatch = text.match(/^(?:推荐)\s*(.+)?$/i);
   if (playlistMatch) {
     return {

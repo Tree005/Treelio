@@ -9,6 +9,7 @@ import { getWeather } from '../services/weather.js';
 import { buildContext } from '../context.js';
 import { route, INTENT } from '../router.js';
 import { getFormattedSchedule } from '../services/calendar.js';
+import config from '../config.js';
 
 const router = Router();
 
@@ -204,21 +205,30 @@ router.post('/', async (req, res) => {
     // 5. 推荐播放指令 — 走 AI，但加场景限定
     if (intent === INTENT.PLAYLIST) {
       const query = params.query || '';
-      const scenarioPrompt = query
-        ? `用户想听 "${query}" 相关的音乐。请直接推荐 3-5 首歌曲，必须以 JSON 格式返回，play 数组不能为空。`
-        : '用户想听点音乐，但没指定具体类型，请根据当前时间、天气和用户的品味来推荐 3-5 首。必须以 JSON 格式返回，play 数组不能为空。';
+      const aiProvider = config.aiProvider;
+
+      // 根据后端选择场景提示词风格
+      // DeepSeek：硬性要求 play 不能为空（V3 偶尔漏掉）
+      // Claude：宽松，让 Claude 自己判断
+      const scenarioPrompt = aiProvider === 'claude'
+        ? (query
+            ? `用户说想听点"${query}"，看看你的推荐。`
+            : `用户没具体说想听什么，根据当前时间、天气和品味推荐就好。`)
+        : (query
+            ? `用户想听 "${query}" 相关的音乐。请直接推荐 3-5 首歌曲，必须以 JSON 格式返回，play 数组不能为空。`
+            : '用户想听点音乐，但没指定具体类型，请根据当前时间、天气和用户的品味来推荐 3-5 首。必须以 JSON 格式返回，play 数组不能为空。');
 
       // 构建带场景限定的上下文
-      const ctx = await buildContext(scenarioPrompt, { weather });
+      const ctx = await buildContext(scenarioPrompt, { weather, aiProvider });
 
       // 临时替换用户消息为场景限定
-      let result = await aiChat(ctx.systemPrompt, ctx.history, scenarioPrompt);
+      let result = await aiChat(ctx.systemPrompt, ctx.history, scenarioPrompt, { aiProvider });
 
-      // 重试：如果 AI 没返回任何歌曲（V3 偶尔只回纯文本），强制要求补歌单
-      if (!result.play || result.play.length === 0) {
+      // 重试（仅 DeepSeek）：如果 AI 没返回任何歌曲，强制要求补歌单
+      if (aiProvider !== 'claude' && (!result.play || result.play.length === 0)) {
         console.warn('[chat] PLAYLIST 意图但 AI 未返回歌曲，触发重试...');
         const retryPrompt = `你上一次没有返回歌曲推荐。用户明确要求推荐音乐（"${query || '任意'}"），你必须在 play 数组中返回 3-5 首具体的歌曲（包含 name 和 artist）。只输出 JSON，不要输出其他文字。`;
-        result = await aiChat(ctx.systemPrompt, ctx.history, retryPrompt);
+        result = await aiChat(ctx.systemPrompt, ctx.history, retryPrompt, { aiProvider });
       }
 
       // 验证推荐歌曲（没版权的尝试找替代）
@@ -267,8 +277,8 @@ router.post('/', async (req, res) => {
     }
 
     // 7. 自然语言 — 完整 AI 对话
-    const ctx = await buildContext(message, { weather });
-    const result = await aiChat(ctx.systemPrompt, ctx.history, message);
+    const ctx = await buildContext(message, { weather, aiProvider: config.aiProvider });
+    const result = await aiChat(ctx.systemPrompt, ctx.history, message, { aiProvider: config.aiProvider });
 
     // 注意：不再做文本提取兜底。AI 如果想推荐歌会通过 JSON play[] 返回，
     // 从纯文本中用正则提取"歌名"误报率极高（如把引号里的"亲"当歌名）。
